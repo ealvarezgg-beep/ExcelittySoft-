@@ -170,23 +170,23 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="card border-l-4 border-l-brand-500 flex flex-col justify-between">
                     <p class="text-slate-400 text-sm font-medium">Ingresos del Mes</p>
-                    <h3 class="text-3xl font-bold text-white mt-2">4.5M Gs</h3>
-                    <p class="text-emerald-400 text-xs mt-2"><i class="fa-solid fa-arrow-trend-up"></i> +12% vs mes anterior</p>
+                    <h3 class="text-3xl font-bold text-white mt-2" id="metricIncome">0 Gs</h3>
+                    <p class="text-emerald-400 text-xs mt-2"><i class="fa-solid fa-arrow-trend-up"></i> Calculado de turnos</p>
                 </div>
                 <div class="card border-l-4 border-l-rose-500 flex flex-col justify-between">
                     <p class="text-slate-400 text-sm font-medium">Gastos Registrados</p>
-                    <h3 class="text-3xl font-bold text-white mt-2">1.2M Gs</h3>
-                    <p class="text-rose-400 text-xs mt-2"><i class="fa-solid fa-chart-line"></i> Dentro del presupuesto</p>
+                    <h3 class="text-3xl font-bold text-white mt-2" id="metricExpenses">0 Gs</h3>
+                    <p class="text-rose-400 text-xs mt-2"><i class="fa-solid fa-chart-line"></i> Total de egresos</p>
                 </div>
                 <div class="card border-l-4 border-l-amber-500 flex flex-col justify-between">
-                    <p class="text-slate-400 text-sm font-medium">Turnos Hoy</p>
-                    <h3 class="text-3xl font-bold text-white mt-2">18</h3>
-                    <p class="text-slate-400 text-xs mt-2">4 pendientes de aprobación</p>
+                    <p class="text-slate-400 text-sm font-medium">Turnos de Hoy</p>
+                    <h3 class="text-3xl font-bold text-white mt-2" id="metricAppointments">0</h3>
+                    <p class="text-amber-400 text-xs mt-2"><i class="fa-solid fa-calendar-check"></i> Turnos agendados hoy</p>
                 </div>
-                <div class="card border-l-4 border-l-indigo-500 flex flex-col justify-between">
-                    <p class="text-slate-400 text-sm font-medium">Tasa de Ausencias</p>
-                    <h3 class="text-3xl font-bold text-white mt-2">2.5%</h3>
-                    <p class="text-emerald-400 text-xs mt-2"><i class="fa-solid fa-arrow-trend-down"></i> Mejorando</p>
+                <div class="card border-l-4 border-l-emerald-500 flex flex-col justify-between">
+                    <p class="text-slate-400 text-sm font-medium">Nuevos Clientes</p>
+                    <h3 class="text-3xl font-bold text-white mt-2" id="metricClients">0</h3>
+                    <p class="text-emerald-400 text-xs mt-2"><i class="fa-solid fa-users"></i> Clientes únicos históricos</p>
                 </div>
             </div>
 
@@ -309,26 +309,9 @@
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="dashboardStaffPerformance">
                                 <tr>
-                                    <td class="font-medium text-white flex items-center gap-2">
-                                        <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs">CL</div>
-                                        Carlos López
-                                    </td>
-                                    <td>09:00 - 18:00</td>
-                                    <td><span class="bg-slate-700 px-2 py-1 rounded text-xs">5 cortes</span></td>
-                                    <td class="text-emerald-400 font-semibold">75.000 Gs</td>
-                                    <td><button class="text-slate-400 hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button></td>
-                                </tr>
-                                <tr>
-                                    <td class="font-medium text-white flex items-center gap-2">
-                                        <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs">JP</div>
-                                        Juan Pérez
-                                    </td>
-                                    <td>10:00 - 20:00</td>
-                                    <td><span class="bg-slate-700 px-2 py-1 rounded text-xs">8 cortes</span></td>
-                                    <td class="text-emerald-400 font-semibold">120.000 Gs</td>
-                                    <td><button class="text-slate-400 hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button></td>
+                                    <td colspan="5" class="text-center text-slate-500 py-4">Cargando rendimiento...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -371,34 +354,13 @@
                     </form>
                 </div>
 
-                <!-- Resumen Presupuesto -->
+                <!-- Lista de Gastos -->
                 <div class="card">
                     <div class="flex justify-between items-center mb-4 border-b border-dark-border pb-2">
-                        <h3 class="text-lg font-semibold text-white">Estado de Presupuesto</h3>
-                        <button class="text-xs text-brand-400 hover:underline">Configurar Limites</button>
+                        <h3 class="text-lg font-semibold text-white">Últimos Registros</h3>
                     </div>
-                    
-                    <div class="space-y-6">
-                        <!-- Item -->
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-slate-300">Insumos y Productos</span>
-                                <span class="text-slate-400">800.000 / <span class="text-white">1.000.000 Gs</span></span>
-                            </div>
-                            <div class="w-full bg-slate-700 rounded-full h-2">
-                                <div class="bg-amber-500 h-2 rounded-full" style="width: 80%"></div>
-                            </div>
-                        </div>
-                        <!-- Item -->
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-slate-300">Marketing</span>
-                                <span class="text-slate-400">150.000 / <span class="text-white">500.000 Gs</span></span>
-                            </div>
-                            <div class="w-full bg-slate-700 rounded-full h-2">
-                                <div class="bg-emerald-500 h-2 rounded-full" style="width: 30%"></div>
-                            </div>
-                        </div>
+                    <div class="space-y-3" id="expensesList">
+                        <p class="text-sm text-slate-400">Cargando datos...</p>
                     </div>
                 </div>
             </div>
@@ -626,6 +588,7 @@
                 document.getElementById(targetId).classList.add('active');
 
                 // Load Data based on view
+                if(targetId === 'view-dashboard') loadDashboard();
                 if(targetId === 'view-appointments') loadAppointments();
                 if(targetId === 'view-staff') loadStaff();
                 if(targetId === 'view-services') loadServices();
@@ -633,6 +596,95 @@
                 if(targetId === 'view-settings') loadSettings();
             });
         });
+        
+        // Initial load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+            document.getElementById('sidebarTenantName').innerText = localStorage.getItem('tenant_slug') || 'Admin';
+        });
+
+        async function loadDashboard() {
+            try {
+                // Fetch appointments
+                const resApp = await fetch(`${API_URL}/${tenantId}/appointments`, { headers: getHeaders() });
+                const apps = await resApp.json();
+                
+                // Fetch services to get prices
+                const resServ = await fetch(`${API_URL}/${tenantId}/services`, { headers: getHeaders() });
+                const services = await resServ.json();
+                const servicePrices = {};
+                services.forEach(s => servicePrices[s.id] = s.price);
+                
+                // Fetch expenses
+                const resExp = await fetch(`${API_URL}/${tenantId}/expenses`, { headers: getHeaders() });
+                const exps = await resExp.json();
+
+                let totalIncome = 0;
+                let todayAppointments = 0;
+                const uniqueClients = new Set();
+                const todayStr = new Date().toISOString().split('T')[0];
+
+                const staffPerformance = {};
+
+                apps.forEach(app => {
+                    if (app.status === 'booked' || app.status === 'completed') {
+                        totalIncome += servicePrices[app.service_id] || 0;
+                        uniqueClients.add(app.client_whatsapp);
+                    }
+                    if (app.start_time.startsWith(todayStr)) {
+                        if (app.status === 'booked' || app.status === 'pending') {
+                            todayAppointments++;
+                        }
+                        if (app.status === 'booked' || app.status === 'completed') {
+                            if (app.staff_id) {
+                                if (!staffPerformance[app.staff_id]) staffPerformance[app.staff_id] = { count: 0, revenue: 0 };
+                                staffPerformance[app.staff_id].count++;
+                                staffPerformance[app.staff_id].revenue += servicePrices[app.service_id] || 0;
+                            }
+                        }
+                    }
+                });
+
+                let totalExpenses = 0;
+                exps.forEach(e => totalExpenses += e.amount);
+
+                document.getElementById('metricIncome').innerText = totalIncome.toLocaleString() + ' Gs';
+                document.getElementById('metricExpenses').innerText = totalExpenses.toLocaleString() + ' Gs';
+                document.getElementById('metricAppointments').innerText = todayAppointments;
+                document.getElementById('metricClients').innerText = uniqueClients.size;
+                
+                // Fetch staff to calculate commissions
+                const resStaff = await fetch(`${API_URL}/${tenantId}/staff`, { headers: getHeaders() });
+                const staffList = await resStaff.json();
+                
+                const perfTbody = document.getElementById('dashboardStaffPerformance');
+                perfTbody.innerHTML = '';
+                if(staffList.length === 0) {
+                    perfTbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-500 py-4">No hay profesionales registrados.</td></tr>';
+                } else {
+                    staffList.forEach(s => {
+                        const perf = staffPerformance[s.id] || { count: 0, revenue: 0 };
+                        const commission = perf.revenue * (s.commission_percentage / 100);
+                        const initials = s.name.substring(0,2).toUpperCase();
+                        perfTbody.innerHTML += `
+                            <tr>
+                                <td class="font-medium text-white flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs">${initials}</div>
+                                    ${s.name}
+                                </td>
+                                <td>${s.working_hours || 'N/A'}</td>
+                                <td><span class="bg-slate-700 px-2 py-1 rounded text-xs">${perf.count} cortes</span></td>
+                                <td class="text-emerald-400 font-semibold">${commission.toLocaleString()} Gs</td>
+                                <td><button class="text-slate-400 hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button></td>
+                            </tr>
+                        `;
+                    });
+                }
+                
+            } catch(e) {
+                console.error(e);
+            }
+        }
 
         async function loadSettings() {
             try {
@@ -875,10 +927,25 @@
                 const res = await fetch(`${API_URL}/${tenantId}/expenses`, { headers: getHeaders() });
                 await handleApiError(res);
                 const exps = await res.json();
-                let total = 0;
-                exps.forEach(e => total += e.amount);
-                // Just log or update visual total if needed
-                console.log("Total expenses loaded: ", total);
+                
+                const list = document.getElementById('expensesList');
+                list.innerHTML = '';
+                if(exps.length === 0) {
+                    list.innerHTML = '<p class="text-sm text-slate-500">No hay gastos registrados aún.</p>';
+                    return;
+                }
+
+                exps.reverse().forEach(e => {
+                    list.innerHTML += `
+                        <div class="bg-slate-900 border border-slate-700 rounded-lg p-3 flex justify-between items-center">
+                            <div>
+                                <p class="text-white font-medium text-sm">${e.description}</p>
+                                <p class="text-xs text-slate-500 uppercase tracking-wider">${e.category}</p>
+                            </div>
+                            <span class="text-rose-400 font-bold">${e.amount.toLocaleString()} Gs</span>
+                        </div>
+                    `;
+                });
             } catch(e){}
         }
 

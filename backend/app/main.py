@@ -190,35 +190,42 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads_dir")
 
 @app.post("/api/auth/register", response_model=schemas.Tenant, tags=["Auth"])
 def register_barber(req: RegisterRequest, db: Session = Depends(get_db)):
-    existing_user = db.query(models.User).filter(models.User.email == req.barberEmail).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="El correo ya está registrado")
-    
-    slug = generate_slug(req.barberName)
-    if db.query(models.Tenant).filter(models.Tenant.slug == slug).first():
-        slug = f"{slug}-{int(datetime.utcnow().timestamp())}"
+    try:
+        existing_user = db.query(models.User).filter(models.User.email == req.barberEmail).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="El correo ya está registrado")
+        
+        slug = generate_slug(req.barberName)
+        if db.query(models.Tenant).filter(models.Tenant.slug == slug).first():
+            slug = f"{slug}-{int(datetime.utcnow().timestamp())}"
 
-    new_tenant = models.Tenant(
-        name=req.barberName,
-        slug=slug,
-        payment_status="pending_approval", 
-        is_active=False,
-        subscription_proof_url=req.subscriptionProofUrl
-    )
-    db.add(new_tenant)
-    db.commit()
-    db.refresh(new_tenant)
+        new_tenant = models.Tenant(
+            name=req.barberName,
+            slug=slug,
+            payment_status="pending_approval", 
+            is_active=False,
+            subscription_proof_url=req.subscriptionProofUrl
+        )
+        db.add(new_tenant)
+        db.commit()
+        db.refresh(new_tenant)
 
-    new_user = models.User(
-        email=req.barberEmail,
-        hashed_password=get_password_hash(req.barberPassword),
-        role="tenant_admin",
-        tenant_id=new_tenant.id
-    )
-    db.add(new_user)
-    db.commit()
+        new_user = models.User(
+            email=req.barberEmail,
+            hashed_password=get_password_hash(req.barberPassword),
+            role="tenant_admin",
+            tenant_id=new_tenant.id
+        )
+        db.add(new_user)
+        db.commit()
 
-    return new_tenant
+        return new_tenant
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=f"System Error: {str(e)}")
 
 @app.post("/api/auth/login", tags=["Auth"])
 def login(req: dict, db: Session = Depends(get_db)):

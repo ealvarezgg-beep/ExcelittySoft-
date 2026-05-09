@@ -42,9 +42,6 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 from fastapi.staticfiles import StaticFiles
 
-# Create DB tables
-models.Base.metadata.create_all(bind=database.engine)
-
 app = FastAPI(title="ExcelittySoft Barber API", version="1.0.0")
 
 # Montar frontend para poder acceder desde un solo dominio
@@ -55,9 +52,15 @@ if os.path.exists(frontend_path):
 
 @app.on_event("startup")
 def seed_database():
-    db = database.SessionLocal()
+    import traceback
     try:
-        # Seed Super Admin
+        # Intentamos crear las tablas si no existen
+        models.Base.metadata.create_all(bind=database.engine)
+        
+        db = database.SessionLocal()
+        try:
+            # Seed Super Admin
+
         admin_email = "admin@vipcentral.com"
         admin_user = db.query(models.User).filter(models.User.email == admin_email).first()
         if not admin_user:
@@ -101,8 +104,11 @@ def seed_database():
             db.add(models.StaffMember(tenant_id=tenant.id, name="Carlos Master"))
             
         db.commit()
-    finally:
-        db.close()
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"CRITICAL ERROR IN STARTUP: {e}")
+        traceback.print_exc()
 
 app.add_middleware(
     CORSMiddleware,

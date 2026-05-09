@@ -348,19 +348,22 @@
 
             try {
                 // 1. Upload the file
+                let proofUrl = null;
                 const fileInput = document.getElementById('subscriptionProofFile');
-                const file = fileInput.files[0];
-                const formData = new FormData();
-                formData.append('file', file);
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const formData = new FormData();
+                    formData.append('file', file);
 
-                const uploadRes = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+                    const uploadRes = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-                if (!uploadRes.ok) throw new Error('Falló la validación del comprobante.');
-                const uploadData = await uploadRes.json();
-                const proofUrl = uploadData.url;
+                    if (!uploadRes.ok) throw new Error('Falló la validación del comprobante.');
+                    const uploadData = await uploadRes.json();
+                    proofUrl = uploadData.url;
+                }
 
                 btn.innerHTML = '<i class="fa-solid fa-server fa-fade"></i> <span>Aprovisionando Tenant...</span>';
 

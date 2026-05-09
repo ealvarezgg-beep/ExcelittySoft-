@@ -127,11 +127,13 @@ def get_db():
     finally:
         db.close()
 
+from typing import Optional
+
 class RegisterRequest(BaseModel):
     barberName: str
     barberEmail: str
     barberPassword: str
-    subscriptionProofUrl: str = None
+    subscriptionProofUrl: Optional[str] = None
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
@@ -168,6 +170,24 @@ def send_whatsapp_notification(phone: str, message: str):
     print(f"[WhatsApp Webhook Mock] A: {phone} | Mensaje: {message}")
 
 # --- RUTAS DE AUTENTICACIÓN / REGISTRO ---
+@app.post("/api/upload", tags=["Upload"])
+async def upload_proof(file: UploadFile = File(None)):
+    if not file:
+        return {"url": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300"} # Placeholder
+    
+    file_id = str(uuid.uuid4())
+    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"{file_id}.{ext}"
+    os.makedirs("uploads", exist_ok=True)
+    with open(f"uploads/{filename}", "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {"url": f"/uploads/{filename}"}
+
+# Montar uploads para ver las imágenes
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads_dir")
+
 @app.post("/api/auth/register", response_model=schemas.Tenant, tags=["Auth"])
 def register_barber(req: RegisterRequest, db: Session = Depends(get_db)):
     existing_user = db.query(models.User).filter(models.User.email == req.barberEmail).first()

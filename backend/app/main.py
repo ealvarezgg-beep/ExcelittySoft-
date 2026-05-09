@@ -278,19 +278,28 @@ def update_tenant_status(tenant_id: int, req: dict, db: Session = Depends(get_db
 
 
 # --- RUTAS TENANT ADMIN (Barbero) ---
-def require_tenant_admin(tenant_id: int, current_user: models.User = Depends(get_current_user)):
+def require_tenant_admin(tenant_id: int, db: Session, current_user: models.User, allow_expired: bool = False):
     if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
         raise HTTPException(status_code=403, detail="No tienes acceso a este tenant")
+    
+    if current_user.role != "super_admin" and not allow_expired:
+        tenant = db.query(models.Tenant).filter(models.Tenant.id == tenant_id).first()
+        if tenant:
+            if tenant.payment_status == 'suspended':
+                raise HTTPException(status_code=402, detail="Account suspended")
+            if tenant.payment_status == 'trial' and (datetime.utcnow() - tenant.created_at).days >= 3:
+                raise HTTPException(status_code=402, detail="Trial expired")
+
     return current_user
 
 @app.get("/api/tenant/{tenant_id}/services", response_model=List[schemas.Service], tags=["TenantAdmin"])
 def read_services(tenant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     return db.query(models.Service).filter(models.Service.tenant_id == tenant_id).all()
 
 @app.post("/api/tenant/{tenant_id}/services", response_model=schemas.Service, tags=["TenantAdmin"])
 def create_service(tenant_id: int, service: schemas.ServiceCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     db_service = models.Service(**service.model_dump(), tenant_id=tenant_id)
     db.add(db_service)
     db.commit()
@@ -299,7 +308,7 @@ def create_service(tenant_id: int, service: schemas.ServiceCreate, db: Session =
 
 @app.delete("/api/tenant/{tenant_id}/services/{service_id}", tags=["TenantAdmin"])
 def delete_service(tenant_id: int, service_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     service = db.query(models.Service).filter(models.Service.id == service_id, models.Service.tenant_id == tenant_id).first()
     if service:
         db.delete(service)
@@ -308,12 +317,12 @@ def delete_service(tenant_id: int, service_id: int, db: Session = Depends(get_db
 
 @app.get("/api/tenant/{tenant_id}/appointments", response_model=List[schemas.Appointment], tags=["TenantAdmin"])
 def read_appointments(tenant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     return db.query(models.Appointment).filter(models.Appointment.tenant_id == tenant_id).order_by(models.Appointment.start_time.asc()).all()
 
 @app.put("/api/tenant/{tenant_id}/appointments/{appointment_id}/status", response_model=schemas.Appointment, tags=["TenantAdmin"])
 def update_appointment_status(tenant_id: int, appointment_id: int, req: dict, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     appo = db.query(models.Appointment).filter(models.Appointment.id == appointment_id, models.Appointment.tenant_id == tenant_id).first()
     if not appo:
         raise HTTPException(status_code=404, detail="Appointment not found")
@@ -330,12 +339,12 @@ def update_appointment_status(tenant_id: int, appointment_id: int, req: dict, db
 # Staff
 @app.get("/api/tenant/{tenant_id}/staff", response_model=List[schemas.StaffMember], tags=["TenantAdmin"])
 def read_staff(tenant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     return db.query(models.StaffMember).filter(models.StaffMember.tenant_id == tenant_id).all()
 
 @app.post("/api/tenant/{tenant_id}/staff", response_model=schemas.StaffMember, tags=["TenantAdmin"])
 def create_staff(tenant_id: int, staff: schemas.StaffMemberCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     db_staff = models.StaffMember(**staff.model_dump(), tenant_id=tenant_id)
     db.add(db_staff)
     db.commit()
@@ -345,12 +354,12 @@ def create_staff(tenant_id: int, staff: schemas.StaffMemberCreate, db: Session =
 # Expenses
 @app.get("/api/tenant/{tenant_id}/expenses", response_model=List[schemas.Expense], tags=["TenantAdmin"])
 def read_expenses(tenant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     return db.query(models.Expense).filter(models.Expense.tenant_id == tenant_id).all()
 
 @app.post("/api/tenant/{tenant_id}/expenses", response_model=schemas.Expense, tags=["TenantAdmin"])
 def create_expense(tenant_id: int, exp: schemas.ExpenseCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     db_exp = models.Expense(**exp.model_dump(), tenant_id=tenant_id)
     db.add(db_exp)
     db.commit()
@@ -360,12 +369,12 @@ def create_expense(tenant_id: int, exp: schemas.ExpenseCreate, db: Session = Dep
 # Gallery
 @app.get("/api/tenant/{tenant_id}/gallery", response_model=List[schemas.GalleryImage], tags=["TenantAdmin"])
 def read_gallery(tenant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     return db.query(models.GalleryImage).filter(models.GalleryImage.tenant_id == tenant_id).all()
 
 @app.post("/api/tenant/{tenant_id}/gallery", response_model=schemas.GalleryImage, tags=["TenantAdmin"])
 def create_gallery_image(tenant_id: int, gal: schemas.GalleryImageCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user)
     db_gal = models.GalleryImage(**gal.model_dump(), tenant_id=tenant_id)
     db.add(db_gal)
     db.commit()
@@ -374,7 +383,7 @@ def create_gallery_image(tenant_id: int, gal: schemas.GalleryImageCreate, db: Se
 
 @app.put("/api/tenant/{tenant_id}/settings", tags=["TenantAdmin"])
 def update_tenant_settings(tenant_id: int, req: dict, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    require_tenant_admin(tenant_id, current_user)
+    require_tenant_admin(tenant_id, db, current_user, allow_expired=True)
     tenant = db.query(models.Tenant).filter(models.Tenant.id == tenant_id).first()
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
@@ -384,30 +393,42 @@ def update_tenant_settings(tenant_id: int, req: dict, db: Session = Depends(get_
         tenant.theme_color = req["theme_color"]
     if "whatsapp_number" in req:
         tenant.whatsapp_number = req["whatsapp_number"]
+    if "address" in req:
+        tenant.address = req["address"]
+    if "map_url" in req:
+        tenant.map_url = req["map_url"]
+    if "subscription_proof_url" in req:
+        tenant.subscription_proof_url = req["subscription_proof_url"]
+        tenant.payment_status = "pending_approval"
     db.commit()
     return {"message": "Settings updated"}
 
 
 # --- RUTAS VISTA PÚBLICA ---
+def check_tenant_public_access(tenant):
+    if not tenant or not tenant.is_active:
+        raise HTTPException(status_code=404, detail="Barbería no encontrada o inactiva")
+    if tenant.payment_status == 'trial' and (datetime.utcnow() - tenant.created_at).days >= 3:
+        raise HTTPException(status_code=402, detail="El periodo de prueba de la barbería ha expirado")
+    if tenant.payment_status == 'suspended':
+        raise HTTPException(status_code=402, detail="La cuenta de la barbería está suspendida por falta de pago")
+
 @app.get("/api/public/{tenant_slug}", response_model=schemas.Tenant, tags=["Public"])
 def get_public_tenant(tenant_slug: str, db: Session = Depends(get_db)):
     tenant = db.query(models.Tenant).filter(models.Tenant.slug == tenant_slug).first()
-    if not tenant or not tenant.is_active:
-        raise HTTPException(status_code=404, detail="Barbería no encontrada o inactiva")
+    check_tenant_public_access(tenant)
     return tenant
 
 @app.get("/api/public/{tenant_slug}/services", response_model=List[schemas.Service], tags=["Public"])
 def read_public_services(tenant_slug: str, db: Session = Depends(get_db)):
     tenant = db.query(models.Tenant).filter(models.Tenant.slug == tenant_slug).first()
-    if not tenant or not tenant.is_active:
-        raise HTTPException(status_code=404, detail="Barbería no encontrada o inactiva")
+    check_tenant_public_access(tenant)
     return db.query(models.Service).filter(models.Service.tenant_id == tenant.id).all()
 
 @app.get("/api/public/{tenant_slug}/booked-times", tags=["Public"])
 def get_booked_times(tenant_slug: str, date: str, db: Session = Depends(get_db)):
     tenant = db.query(models.Tenant).filter(models.Tenant.slug == tenant_slug).first()
-    if not tenant or not tenant.is_active:
-        raise HTTPException(status_code=404, detail="Barbería no encontrada o inactiva")
+    check_tenant_public_access(tenant)
     
     # Parse date
     try:
@@ -433,8 +454,7 @@ def get_booked_times(tenant_slug: str, date: str, db: Session = Depends(get_db))
 @app.post("/api/public/{tenant_slug}/appointments", response_model=schemas.Appointment, tags=["Public"])
 def create_public_appointment(tenant_slug: str, appointment: schemas.AppointmentCreate, db: Session = Depends(get_db)):
     tenant = db.query(models.Tenant).filter(models.Tenant.slug == tenant_slug).first()
-    if not tenant or not tenant.is_active:
-        raise HTTPException(status_code=404, detail="Barbería no encontrada o inactiva")
+    check_tenant_public_access(tenant)
     
     # Check if a staff exists for this staff_id and tenant
     if appointment.staff_id:
@@ -454,8 +474,7 @@ def create_public_appointment(tenant_slug: str, appointment: schemas.Appointment
 @app.get("/api/public/{tenant_slug}/staff", response_model=List[schemas.StaffMember], tags=["Public"])
 def read_public_staff(tenant_slug: str, db: Session = Depends(get_db)):
     tenant = db.query(models.Tenant).filter(models.Tenant.slug == tenant_slug).first()
-    if not tenant or not tenant.is_active:
-        raise HTTPException(status_code=404, detail="Barbería no encontrada o inactiva")
+    check_tenant_public_access(tenant)
     return db.query(models.StaffMember).filter(models.StaffMember.tenant_id == tenant.id, models.StaffMember.is_active == True).all()
 
 @app.get("/api/public/{tenant_slug}/gallery", response_model=List[schemas.GalleryImage], tags=["Public"])

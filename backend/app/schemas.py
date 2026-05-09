@@ -8,6 +8,7 @@ class TenantBase(BaseModel):
     slug: str
     logo_url: Optional[str] = None
     address: Optional[str] = None
+    map_url: Optional[str] = None
     bank_details: Optional[str] = None
     theme_color: Optional[str] = "#3b82f6"
     whatsapp_number: Optional[str] = None

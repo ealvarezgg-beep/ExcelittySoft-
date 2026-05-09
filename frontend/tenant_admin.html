@@ -483,6 +483,15 @@
                         <input type="tel" id="tenantWhatsapp" class="form-input" placeholder="+595...">
                     </div>
                     <div>
+                        <label class="block text-sm text-slate-400 mb-1">Dirección / Referencias</label>
+                        <input type="text" id="tenantAddress" class="form-input" placeholder="Ej: Frente al supermercado Stock">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">Enlace de Google Maps</label>
+                        <input type="url" id="tenantMapUrl" class="form-input" placeholder="https://maps.app.goo.gl/...">
+                        <p class="text-xs text-slate-500 mt-1">Pega el link de Google Maps para que los clientes puedan llegar fácilmente.</p>
+                    </div>
+                    <div>
                         <label class="block text-sm text-slate-400 mb-1">Datos Bancarios para Transferencias</label>
                         <textarea id="tenantBankDetails" class="form-input h-24" placeholder="Ej: Banco Familiar | Cuenta: 123456 | CI: 1234567 | A nombre de Juan Perez"></textarea>
                     </div>
@@ -501,6 +510,34 @@
             <h3 class="text-xl font-bold text-white mb-4">Comprobante de Pago</h3>
             <img id="proofImage" src="" alt="Comprobante" class="w-full max-h-64 object-contain rounded-lg border border-slate-700 bg-slate-900 mb-6">
             <button class="btn-outline w-full" onclick="closeProofModal()">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Lockout Modal (Trial Expired / Unpaid) -->
+    <div id="lockoutModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/95 backdrop-blur-md">
+        <div class="bg-dark-card border border-rose-500/30 rounded-2xl p-8 max-w-md w-[90%] mx-auto text-center shadow-[0_0_50px_rgba(244,63,94,0.1)]">
+            <div class="w-20 h-20 bg-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2" id="lockoutTitle">Acceso Restringido</h2>
+            <p class="text-slate-400 text-sm mb-6 leading-relaxed" id="lockoutMessage">
+                Tu periodo de prueba ha finalizado. Para seguir utilizando la plataforma y recibiendo reservas, realiza el pago de la suscripción mensual (150.000 Gs) y sube tu comprobante.
+            </p>
+            <div class="bg-slate-900 rounded-xl p-4 text-left border border-slate-700 mb-6">
+                <p class="text-sm text-slate-300 font-mono">Banco Itaú<br>Cuenta: 987654321<br>CI: 1234567<br>A nombre de ExcelittySoft</p>
+            </div>
+            
+            <form id="lockoutPaymentForm" onsubmit="submitSubscriptionPayment(event)">
+                <div class="dropzone mb-4">
+                    <input type="file" accept="image/*" required id="subscriptionProofFile" class="dropzone-input" onchange="document.getElementById('subFileNameDisplay').innerText = this.files[0] ? this.files[0].name : 'Haz clic o arrastra tu comprobante'">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-500 mb-2"></i>
+                    <p class="text-sm text-slate-400" id="subFileNameDisplay">Haz clic o arrastra tu comprobante</p>
+                </div>
+                <button type="submit" id="btnSubSubmit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl transition-colors">
+                    Enviar Comprobante
+                </button>
+            </form>
+            <button onclick="logout()" class="mt-4 text-sm text-slate-500 hover:text-white transition-colors">Cerrar Sesión</button>
         </div>
     </div>
 
@@ -538,7 +575,55 @@
                 }
                 throw new Error("No autorizado");
             }
+            if (res.status === 402) {
+                // Payment Required (Trial expired or Suspended)
+                const data = await res.json().catch(() => ({}));
+                document.getElementById('lockoutModal').style.display = 'flex';
+                if(data.detail) {
+                    document.getElementById('lockoutMessage').innerText = data.detail + ". Realiza el pago mensual (150.000 Gs) y sube tu comprobante para continuar.";
+                }
+                throw new Error("Payment Required");
+            }
             if (!res.ok) throw new Error("Error en la solicitud");
+        }
+
+        async function submitSubscriptionPayment(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubSubmit');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Subiendo...';
+            btn.disabled = true;
+
+            try {
+                const fileInput = document.getElementById('subscriptionProofFile');
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!uploadRes.ok) throw new Error("Error subiendo archivo");
+                const data = await uploadRes.json();
+                const proofUrl = data.url;
+
+                // Update tenant settings with the proof
+                const res = await fetch(`${API_URL}/${tenantId}/settings`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ subscription_proof_url: proofUrl })
+                });
+
+                if(!res.ok) throw new Error("Error al notificar pago");
+                
+                document.getElementById('lockoutMessage').innerHTML = "<span class='text-emerald-400'>¡Comprobante enviado!</span><br>Un administrador verificará el pago en breve. Tu cuenta pasará a estado pendiente.";
+                btn.style.display = 'none';
+                fileInput.parentElement.style.display = 'none';
+                
+            } catch(err) {
+                alert("Ocurrió un error. Intenta nuevamente.");
+                btn.innerHTML = 'Enviar Comprobante';
+                btn.disabled = false;
+            }
         }
 
         function logout() {
@@ -573,6 +658,8 @@
                 document.getElementById('tenantThemeColor').value = data.theme_color || "#0ea5e9";
                 document.getElementById('tenantBankDetails').value = data.bank_details || "";
                 document.getElementById('tenantWhatsapp').value = data.whatsapp_number || "";
+                document.getElementById('tenantAddress').value = data.address || "";
+                document.getElementById('tenantMapUrl').value = data.map_url || "";
             } catch (e) {
                 console.error(e);
             }
@@ -582,11 +669,19 @@
             const bankDetails = document.getElementById('tenantBankDetails').value;
             const themeColor = document.getElementById('tenantThemeColor').value;
             const whatsappNumber = document.getElementById('tenantWhatsapp').value;
+            const address = document.getElementById('tenantAddress').value;
+            const mapUrl = document.getElementById('tenantMapUrl').value;
             try {
                 const res = await fetch(`${API_URL}/${tenantId}/settings`, {
                     method: 'PUT',
                     headers: getHeaders(),
-                    body: JSON.stringify({ bank_details: bankDetails, theme_color: themeColor, whatsapp_number: whatsappNumber })
+                    body: JSON.stringify({ 
+                        bank_details: bankDetails, 
+                        theme_color: themeColor, 
+                        whatsapp_number: whatsappNumber,
+                        address: address,
+                        map_url: mapUrl
+                    })
                 });
                 await handleApiError(res);
                 showToast("Configuración guardada exitosamente");
@@ -656,15 +751,18 @@
                                 <h4 class="font-bold text-white text-lg">${app.client_name}</h4>
                                 <p class="text-sm text-slate-400">Servicio ID: ${app.service_id} | <span class="text-brand-400">Staff ID: ${app.staff_id || 'N/A'}</span></p>
                                 <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-phone"></i> ${app.client_whatsapp}</p>
-                                <button class="text-brand-400 text-xs hover:underline mt-2 flex items-center gap-1" onclick="openProofModal('${app.payment_proof_url}')">
-                                    <i class="fa-solid fa-image"></i> Ver Comprobante
-                                </button>
+                                ${app.payment_proof_url ? `<button class="text-brand-400 text-xs hover:underline mt-2 flex items-center gap-1" onclick="openProofModal('${app.payment_proof_url}')"><i class="fa-solid fa-image"></i> Ver Comprobante</button>` : `<p class="text-xs text-slate-500 mt-2"><i>Pago en local (WhatsApp)</i></p>`}
                             </div>
                             <div class="text-right">
                                 <h3 class="text-2xl font-bold text-white mb-2">${time}</h3>
-                                <button class="bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white border border-amber-500/50 px-3 py-1.5 rounded text-sm font-medium transition-colors" onclick="approveAppointment(this, ${app.id}, '${app.client_name}', '${app.client_whatsapp}')">
-                                    Aprobar Turno
-                                </button>
+                                <div class="flex gap-2 justify-end">
+                                    <button class="bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white border border-amber-500/50 px-3 py-1.5 rounded text-sm font-medium transition-colors" onclick="approveAppointment(this, ${app.id}, '${app.client_name}')">
+                                        Aprobar
+                                    </button>
+                                    <button class="bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white border border-rose-500/50 px-3 py-1.5 rounded text-sm font-medium transition-colors" onclick="cancelAppointment(this, ${app.id})">
+                                        Liberar
+                                    </button>
+                                </div>
                             </div>
                         </div>`;
                     } else if(app.status === 'booked') {
@@ -676,6 +774,9 @@
                             </div>
                             <div class="text-right flex items-center gap-3">
                                 <h3 class="text-2xl font-bold text-white">${time}</h3>
+                                <button class="bg-slate-800 text-rose-400 hover:text-rose-500 p-2 rounded transition-colors" onclick="cancelAppointment(this, ${app.id})">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
                                 <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
                                     <i class="fa-solid fa-check"></i>
                                 </div>
@@ -692,7 +793,7 @@
             }
         }
 
-        async function approveAppointment(btnElement, id, clientName, clientPhone) {
+        async function approveAppointment(btnElement, id, clientName) {
             btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             btnElement.disabled = true;
 
@@ -704,12 +805,32 @@
                 });
                 await handleApiError(res);
 
-                // Lógica Backend ya dispara el whatsapp
                 showToast(`Turno de ${clientName} aprobado.`);
-                loadAppointments(); // refresh lists
+                loadAppointments(); 
             } catch (e) {
                 showToast("No se pudo aprobar el turno.", "error");
-                btnElement.innerHTML = 'Aprobar Turno';
+                btnElement.innerHTML = 'Aprobar';
+                btnElement.disabled = false;
+            }
+        }
+
+        async function cancelAppointment(btnElement, id) {
+            if(!confirm("¿Liberar este turno? El cliente no recibirá una notificación de cancelación automáticamente.")) return;
+            btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btnElement.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/appointments/${id}/status`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify({status: 'cancelled'})
+                });
+                await handleApiError(res);
+                showToast(`Turno liberado.`);
+                loadAppointments(); 
+            } catch (e) {
+                showToast("No se pudo liberar el turno.", "error");
+                btnElement.innerHTML = 'Liberar';
                 btnElement.disabled = false;
             }
         }

@@ -11,6 +11,7 @@ class Tenant(Base):
     slug = Column(String, unique=True, index=True) # e.g., 'nombre-barberia'
     logo_url = Column(String, nullable=True)
     address = Column(String, nullable=True)
+    map_url = Column(String, nullable=True) # Google Maps enlace o iframe
     bank_details = Column(String, nullable=True) # For manual transfers
     subscription_proof_url = Column(String, nullable=True) # For SaaS subscription
     theme_color = Column(String, default="#3b82f6") # Blue 500 default

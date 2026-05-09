@@ -113,7 +113,12 @@
     <main class="max-w-2xl mx-auto px-4 py-12">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">Barbería El Rey</h1>
-            <p class="text-slate-400">Completa tu reserva en pocos pasos</p>
+            <p class="text-slate-400 mb-4">Completa tu reserva en pocos pasos</p>
+            <div id="locationBlock" class="hidden inline-flex items-center gap-2 bg-slate-800/50 border border-slate-700 px-4 py-2 rounded-full text-sm">
+                <i class="fa-solid fa-location-dot text-brand-500"></i>
+                <span id="tenantAddressText" class="text-slate-300"></span>
+                <a id="tenantMapLink" href="#" target="_blank" class="text-brand-400 hover:underline ml-2 hidden">Ver en Mapa</a>
+            </div>
         </div>
 
         <form id="bookingForm">
@@ -281,12 +286,28 @@
             try {
                 // Fetch Tenant Info
                 const resTenant = await fetch(`/api/public/${tenantSlug}`);
-                if (!resTenant.ok) throw new Error("Barbería no encontrada.");
+                if (!resTenant.ok) {
+                    if (resTenant.status === 402) {
+                        document.body.innerHTML = '<div class="h-screen w-screen flex items-center justify-center text-center p-4"><div class="bg-dark-card border border-rose-500/30 rounded-2xl p-8 max-w-md w-full"><i class="fa-solid fa-lock text-rose-500 text-5xl mb-4"></i><h2 class="text-2xl font-bold text-white mb-2">Servicio Suspendido</h2><p class="text-slate-400 text-sm">El periodo de prueba o la suscripción de esta barbería ha expirado.</p></div></div>';
+                        throw new Error("Tenant suspendido");
+                    }
+                    throw new Error("Barbería no encontrada.");
+                }
                 const tenant = await resTenant.json();
 
                 document.querySelector('h1').innerText = tenant.name;
                 document.getElementById('bankDetails').innerText = tenant.bank_details || "Contacte al local para los datos bancarios.";
                 tenantWhatsappNumber = tenant.whatsapp_number;
+                
+                if (tenant.address || tenant.map_url) {
+                    document.getElementById('locationBlock').classList.remove('hidden');
+                    if (tenant.address) document.getElementById('tenantAddressText').innerText = tenant.address;
+                    if (tenant.map_url) {
+                        const mapLink = document.getElementById('tenantMapLink');
+                        mapLink.href = tenant.map_url;
+                        mapLink.classList.remove('hidden');
+                    }
+                }
                 
                 // Inject Theme Color
                 if (tenant.theme_color) {

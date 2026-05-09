@@ -386,13 +386,19 @@
                     showToast('Despliegue Exitoso', 'Tu ambiente seguro ha sido creado y está Activo por 3 Días de Prueba.');
                     document.getElementById('registerForm').reset();
                     document.getElementById('fileNameDisplay').innerText = 'Arrastra la imagen o haz clic para explorar';
+                    
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> <span>¡Redirigiendo al Login!</span>';
+                    setTimeout(() => {
+                        window.location.href = '/app/login.html';
+                    }, 2500);
                 } else {
                     const data = await response.json();
                     showToast('Excepción de Sistema', data.detail || 'Ocurrió un error en el aprovisionamiento.', true);
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHtml;
                 }
             } catch (error) {
                 showToast('Falla de Red', 'Conexión rechazada: ' + error.message, true);
-            } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalBtnHtml;
             }

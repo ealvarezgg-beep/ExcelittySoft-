@@ -402,20 +402,7 @@
 
         async function handleApiError(res) {
             if (res.status === 401 || res.status === 403) {
-                console.warn("Unauthenticated request. Attempting auto-login for demo...");
-                const loginRes = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({email: 'admin@vipcentral.com', password: 'password123'})
-                });
-                if(loginRes.ok) {
-                    const data = await loginRes.json();
-                    localStorage.setItem('access_token', data.access_token);
-                    token = data.access_token;
-                    window.location.reload();
-                } else {
-                    addLog("[ERROR] No autorizado. Por favor inicie sesión.", "error");
-                }
+                window.location.href = '/app/login.html';
                 throw new Error("No autorizado");
             }
             if (!res.ok) throw new Error("Error en la API");

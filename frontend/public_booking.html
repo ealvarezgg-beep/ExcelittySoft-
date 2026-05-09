@@ -181,20 +181,36 @@
                     </div>
                 </div>
 
-                <div class="bg-dark border border-dark-border rounded-xl p-5 mb-4">
-                    <div class="flex items-center gap-2 mb-3 border-b border-dark-border pb-3">
-                        <i class="fa-solid fa-building-columns text-brand-500"></i>
-                        <h4 class="font-semibold text-white">Datos de Transferencia</h4>
+                <div class="mb-4">
+                    <label class="block text-sm text-slate-400 mb-2">Método de Pago</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="border border-slate-700 bg-slate-800 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:border-brand-500 transition-colors" onclick="togglePaymentMethod('transfer')">
+                            <input type="radio" name="payment_method" value="transfer" class="accent-brand-500" checked>
+                            <span class="text-white text-sm font-medium">Transferencia</span>
+                        </label>
+                        <label class="border border-slate-700 bg-slate-800 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:border-brand-500 transition-colors" onclick="togglePaymentMethod('whatsapp')">
+                            <input type="radio" name="payment_method" value="whatsapp" class="accent-brand-500">
+                            <span class="text-white text-sm font-medium">En el Local (WhatsApp)</span>
+                        </label>
                     </div>
-                    <p class="text-sm text-slate-300 font-mono tracking-wide" id="bankDetails">Cargando...</p>
                 </div>
 
-                <div>
-                    <label class="block text-sm text-slate-400 mb-2">Comprobante de Pago</label>
-                    <div class="dropzone">
-                        <input type="file" accept="image/*" required id="appointmentProofFile" class="dropzone-input" onchange="document.getElementById('fileNameDisplay').innerText = this.files[0] ? this.files[0].name : 'Haz clic o arrastra tu comprobante aquí'">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-500 mb-2"></i>
-                        <p class="text-sm text-slate-400" id="fileNameDisplay">Haz clic o arrastra tu comprobante aquí</p>
+                <div id="transferDetailsBlock">
+                    <div class="bg-dark border border-dark-border rounded-xl p-5 mb-4">
+                        <div class="flex items-center gap-2 mb-3 border-b border-dark-border pb-3">
+                            <i class="fa-solid fa-building-columns text-brand-500"></i>
+                            <h4 class="font-semibold text-white">Datos de Transferencia</h4>
+                        </div>
+                        <p class="text-sm text-slate-300 font-mono tracking-wide" id="bankDetails">Cargando...</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-2">Comprobante de Pago</label>
+                        <div class="dropzone">
+                            <input type="file" accept="image/*" id="appointmentProofFile" class="dropzone-input" onchange="document.getElementById('fileNameDisplay').innerText = this.files[0] ? this.files[0].name : 'Haz clic o arrastra tu comprobante aquí'">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-500 mb-2"></i>
+                            <p class="text-sm text-slate-400" id="fileNameDisplay">Haz clic o arrastra tu comprobante aquí</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -241,12 +257,24 @@
         let selectedServiceId = null;
         let selectedStaffId = null;
         let selectedTime = null;
+        let tenantWhatsappNumber = null;
 
         function showToastError(msg) {
             const t = document.getElementById('toastAlert');
             document.getElementById('toastAlertText').innerText = msg;
             t.classList.add('show');
             setTimeout(() => { t.classList.remove('show'); }, 4000);
+        }
+
+        function togglePaymentMethod(method) {
+            const transferBlock = document.getElementById('transferDetailsBlock');
+            if (method === 'transfer') {
+                transferBlock.style.display = 'block';
+                document.getElementById('btnSubmit').innerHTML = '<span>Confirmar Reserva</span> <i class="fa-solid fa-check"></i>';
+            } else {
+                transferBlock.style.display = 'none';
+                document.getElementById('btnSubmit').innerHTML = '<span>Agendar por WhatsApp</span> <i class="fa-brands fa-whatsapp text-xl"></i>';
+            }
         }
 
         async function loadData() {
@@ -258,6 +286,7 @@
 
                 document.querySelector('h1').innerText = tenant.name;
                 document.getElementById('bankDetails').innerText = tenant.bank_details || "Contacte al local para los datos bancarios.";
+                tenantWhatsappNumber = tenant.whatsapp_number;
                 
                 // Inject Theme Color
                 if (tenant.theme_color) {
@@ -403,10 +432,17 @@
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Procesando...</span>';
 
             try {
+                const isTransfer = document.querySelector('input[name="payment_method"]:checked').value === 'transfer';
+
                 // 1. Upload proof
-                const fileInput = document.getElementById('appointmentProofFile');
                 let proofUrl = null;
-                if (fileInput.files.length > 0) {
+                if (isTransfer) {
+                    const fileInput = document.getElementById('appointmentProofFile');
+                    if (fileInput.files.length === 0) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalBtnHtml;
+                        return showToastError('Debes subir el comprobante de transferencia.');
+                    }
                     const formData = new FormData();
                     formData.append('file', fileInput.files[0]);
                     const uploadRes = await fetch('/api/upload', {
@@ -425,12 +461,13 @@
                 const startTimeStr = `${dateStr}T${selectedTime}:00`;
                 const startTime = new Date(startTimeStr);
                 const endTime = new Date(startTime.getTime() + 30*60000); // 30 min aprox
+                const clientName = document.getElementById('clientName').value;
 
                 // 2. Submit booking
                 const payload = {
                     service_id: selectedServiceId,
                     staff_id: selectedStaffId, // can be null
-                    client_name: document.getElementById('clientName').value,
+                    client_name: clientName,
                     client_whatsapp: document.getElementById('clientPhone').value,
                     start_time: startTime.toISOString(), 
                     end_time: endTime.toISOString(),
@@ -444,6 +481,15 @@
                 });
 
                 if(!bookRes.ok) throw new Error('No se pudo confirmar la reserva.');
+
+                if (!isTransfer && tenantWhatsappNumber) {
+                    // Redirect to WhatsApp
+                    const serviceName = document.querySelector('#servicesList .selected h4').innerText;
+                    const text = `Hola! Quiero agendar un turno para *${serviceName}* el día *${dateStr}* a las *${selectedTime}*. Mi nombre es *${clientName}*. Pagaré en el local.`;
+                    const waUrl = `https://wa.me/${tenantWhatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
+                    window.location.href = waUrl;
+                    return;
+                }
 
                 // Show Modal
                 const modal = document.getElementById('successModal');

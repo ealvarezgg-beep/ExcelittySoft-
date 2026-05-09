@@ -134,6 +134,7 @@ class RegisterRequest(BaseModel):
     barberName: str
     barberEmail: str
     barberPassword: str
+    barberWhatsapp: str
     subscriptionProofUrl: Optional[str] = None
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
@@ -203,9 +204,10 @@ def register_barber(req: RegisterRequest, db: Session = Depends(get_db)):
         new_tenant = models.Tenant(
             name=req.barberName,
             slug=slug,
-            payment_status="pending_approval", 
-            is_active=False,
-            subscription_proof_url=req.subscriptionProofUrl
+            payment_status="trial", 
+            is_active=True,
+            subscription_proof_url=req.subscriptionProofUrl,
+            whatsapp_number=req.barberWhatsapp
         )
         db.add(new_tenant)
         db.commit()
@@ -380,6 +382,8 @@ def update_tenant_settings(tenant_id: int, req: dict, db: Session = Depends(get_
         tenant.bank_details = req["bank_details"]
     if "theme_color" in req:
         tenant.theme_color = req["theme_color"]
+    if "whatsapp_number" in req:
+        tenant.whatsapp_number = req["whatsapp_number"]
     db.commit()
     return {"message": "Settings updated"}
 

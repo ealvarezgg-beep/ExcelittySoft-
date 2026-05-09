@@ -14,8 +14,9 @@ class Tenant(Base):
     bank_details = Column(String, nullable=True) # For manual transfers
     subscription_proof_url = Column(String, nullable=True) # For SaaS subscription
     theme_color = Column(String, default="#3b82f6") # Blue 500 default
+    whatsapp_number = Column(String, nullable=True) # WhatsApp del barbero
     is_active = Column(Boolean, default=False)
-    payment_status = Column(String, default="pending_approval") # 'paid', 'pending_approval', 'suspended'
+    payment_status = Column(String, default="pending_approval") # 'paid', 'pending_approval', 'suspended', 'trial'
     created_at = Column(DateTime, default=datetime.utcnow)
 
     users = relationship("User", back_populates="tenant")

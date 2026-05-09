@@ -479,6 +479,10 @@
                         </div>
                     </div>
                     <div>
+                        <label class="block text-sm text-slate-400 mb-1">WhatsApp de Reservas</label>
+                        <input type="tel" id="tenantWhatsapp" class="form-input" placeholder="+595...">
+                    </div>
+                    <div>
                         <label class="block text-sm text-slate-400 mb-1">Datos Bancarios para Transferencias</label>
                         <textarea id="tenantBankDetails" class="form-input h-24" placeholder="Ej: Banco Familiar | Cuenta: 123456 | CI: 1234567 | A nombre de Juan Perez"></textarea>
                     </div>
@@ -564,10 +568,11 @@
         async function loadSettings() {
             try {
                 // To get tenant details, we can use the backend or simply the public endpoint
-                const res = await fetch(`/api/public/el-rey-barber-shop`); // using a placeholder slug, ideally we get our own tenant slug from backend
-                // Better approach: fetch our own tenant info. Wait, we don't have an endpoint for my tenant info except through superadmin. 
-                // I will add a mock settings fill for now to demonstrate UI.
-                document.getElementById('tenantThemeColor').value = "#0ea5e9";
+                const res = await fetch(`/api/public/${localStorage.getItem('tenant_slug') || 'el-rey-barber-shop'}`);
+                const data = await res.json();
+                document.getElementById('tenantThemeColor').value = data.theme_color || "#0ea5e9";
+                document.getElementById('tenantBankDetails').value = data.bank_details || "";
+                document.getElementById('tenantWhatsapp').value = data.whatsapp_number || "";
             } catch (e) {
                 console.error(e);
             }
@@ -576,11 +581,12 @@
         async function saveSettings() {
             const bankDetails = document.getElementById('tenantBankDetails').value;
             const themeColor = document.getElementById('tenantThemeColor').value;
+            const whatsappNumber = document.getElementById('tenantWhatsapp').value;
             try {
                 const res = await fetch(`${API_URL}/${tenantId}/settings`, {
                     method: 'PUT',
                     headers: getHeaders(),
-                    body: JSON.stringify({ bank_details: bankDetails, theme_color: themeColor })
+                    body: JSON.stringify({ bank_details: bankDetails, theme_color: themeColor, whatsapp_number: whatsappNumber })
                 });
                 await handleApiError(res);
                 showToast("Configuración guardada exitosamente");

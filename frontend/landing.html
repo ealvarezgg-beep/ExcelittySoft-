@@ -245,6 +245,12 @@
                             </div>
                             
                             <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">WhatsApp de tu Barbería (Para reservas)</label>
+                                <input type="tel" required id="barberWhatsapp" placeholder="+595..."
+                                    class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors">
+                            </div>
+
+                            <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Contraseña Maestra</label>
                                 <input type="password" required id="barberPassword" placeholder="••••••••"
                                     class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors">
@@ -255,13 +261,14 @@
                                 <div class="file-upload-wrapper">
                                     <i class="fa-solid fa-cloud-arrow-up text-4xl text-gold/50 mb-3"></i>
                                     <span class="text-sm text-gray-400 text-center" id="fileNameDisplay">Arrastra la imagen o haz clic para explorar</span>
-                                    <input type="file" accept="image/*" required id="subscriptionProofFile" class="file-upload-input" onchange="document.getElementById('fileNameDisplay').innerText = this.files[0] ? this.files[0].name : 'Arrastra la imagen o haz clic para explorar'">
+                                    <input type="file" accept="image/*" id="subscriptionProofFile" class="file-upload-input" onchange="document.getElementById('fileNameDisplay').innerText = this.files[0] ? this.files[0].name : 'Arrastra la imagen o haz clic para explorar'">
                                 </div>
+                                <p class="text-xs text-gray-500 mt-2 text-center">Opcional por ahora: Tienes 3 Días de Prueba Gratuita.</p>
                             </div>
 
                             <button type="submit" id="btnSubmit" 
                                 class="w-full bg-gold hover:bg-gold-hover text-black font-bold text-lg py-4 rounded-xl mt-6 transition-all duration-300 flex justify-center items-center gap-2">
-                                <span>Completar Activación</span>
+                                <span>Iniciar Prueba de 3 Días</span>
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </form>
@@ -362,6 +369,7 @@
                     barberName: document.getElementById('barberName').value,
                     barberEmail: document.getElementById('barberEmail').value,
                     barberPassword: document.getElementById('barberPassword').value,
+                    barberWhatsapp: document.getElementById('barberWhatsapp').value,
                     subscriptionProofUrl: proofUrl
                 };
 
@@ -372,7 +380,7 @@
                 });
 
                 if (response.ok) {
-                    showToast('Despliegue Exitoso', 'Tu ambiente seguro ha sido creado. Esperando autorización criptográfica del Super Admin.');
+                    showToast('Despliegue Exitoso', 'Tu ambiente seguro ha sido creado y está Activo por 3 Días de Prueba.');
                     document.getElementById('registerForm').reset();
                     document.getElementById('fileNameDisplay').innerText = 'Arrastra la imagen o haz clic para explorar';
                 } else {

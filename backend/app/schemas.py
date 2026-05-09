@@ -10,6 +10,7 @@ class TenantBase(BaseModel):
     address: Optional[str] = None
     bank_details: Optional[str] = None
     theme_color: Optional[str] = "#3b82f6"
+    whatsapp_number: Optional[str] = None
 
 class TenantCreate(TenantBase):
     subscription_proof_url: Optional[str] = None

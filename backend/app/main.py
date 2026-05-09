@@ -58,9 +58,7 @@ def seed_database():
         models.Base.metadata.create_all(bind=database.engine)
         
         db = database.SessionLocal()
-        try:
-            # Seed Super Admin
-
+        # Seed Super Admin
         admin_email = "admin@vipcentral.com"
         admin_user = db.query(models.User).filter(models.User.email == admin_email).first()
         if not admin_user:
@@ -104,11 +102,14 @@ def seed_database():
             db.add(models.StaffMember(tenant_id=tenant.id, name="Carlos Master"))
             
         db.commit()
-        finally:
-            db.close()
+        db.close()
     except Exception as e:
         print(f"CRITICAL ERROR IN STARTUP: {e}")
         traceback.print_exc()
+        try:
+            db.close()
+        except:
+            pass
 
 app.add_middleware(
     CORSMiddleware,

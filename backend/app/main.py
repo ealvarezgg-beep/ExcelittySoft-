@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from passlib.context import CryptContext
+# passlib removed, using bcrypt directly
 from jose import JWTError, jwt
 import os
 import re
@@ -20,15 +20,25 @@ SECRET_KEY = "super-secret-key-for-excelittysoft" # In production, use env var
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def verify_password(plain_password, hashed_password):
-    # Bcrypt soporta un máximo de 72 bytes. Truncamos para evitar errores o ataques DoS.
-    return pwd_context.verify(plain_password[:72], hashed_password)
+    if isinstance(plain_password, str):
+        plain_password = plain_password.encode('utf-8')
+    if isinstance(hashed_password, str):
+        hashed_password = hashed_password.encode('utf-8')
+    # Bcrypt soporta máximo 72 bytes.
+    if len(plain_password) > 72:
+        plain_password = plain_password[:72]
+    return bcrypt.checkpw(plain_password, hashed_password)
 
 def get_password_hash(password):
-    return pwd_context.hash(password[:72])
+    if isinstance(password, str):
+        password = password.encode('utf-8')
+    if len(password) > 72:
+        password = password[:72]
+    return bcrypt.hashpw(password, bcrypt.gensalt()).decode('utf-8')
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()

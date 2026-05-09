@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - ExcelittySoft</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            400: '#38bdf8', /* light blue */
+                            500: '#0ea5e9', /* primary blue */
+                            600: '#0284c7', /* dark blue */
+                        },
+                        dark: {
+                            bg: '#0f172a', /* slate-900 */
+                            surface: '#1e293b', /* slate-800 */
+                            border: '#334155', /* slate-700 */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; overflow: hidden; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .sidebar-link {
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+            border-radius: 0.5rem; color: #94a3b8; transition: all 0.2s ease; cursor: pointer;
+        }
+        .sidebar-link:hover { background-color: rgba(14, 165, 233, 0.1); color: #38bdf8; }
+        .sidebar-link.active { background-color: #0ea5e9; color: #fff; box-shadow: 0 4px 14px 0 rgba(14, 165, 233, 0.39); }
+
+        .view-section { display: none; animation: fadeIn 0.4s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        .form-input, .form-select {
+            width: 100%; background-color: #0f172a; border: 1px solid #334155; border-radius: 0.5rem;
+            padding: 0.6rem 1rem; color: #f8fafc; transition: all 0.2s; outline: none;
+        }
+        .form-input:focus, .form-select:focus { border-color: #0ea5e9; box-shadow: 0 0 0 2px rgba(14,165,233,0.2); }
+
+        .btn-primary { background-color: #0ea5e9; color: white; padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; }
+        .btn-primary:hover { background-color: #0284c7; box-shadow: 0 4px 14px 0 rgba(14,165,233,0.3); }
+
+        .btn-outline { border: 1px solid #334155; color: #cbd5e1; padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; }
+        .btn-outline:hover { border-color: #0ea5e9; color: #38bdf8; background-color: rgba(14,165,233,0.05); }
+
+        /* Tables */
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th { text-align: left; padding: 1rem; border-bottom: 1px solid #334155; color: #94a3b8; font-weight: 500; font-size: 0.875rem; }
+        td { padding: 1rem; border-bottom: 1px solid rgba(51, 65, 85, 0.5); color: #e2e8f0; font-size: 0.875rem; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: rgba(255,255,255,0.02); }
+
+        /* Toast */
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            background-color: #1e293b; border-left: 4px solid #0ea5e9; color: #f8fafc;
+            padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 0.75rem; animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; } }
+
+        /* Modals */
+        .modal-bg { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); z-index: 50; display: none; align-items: center; justify-content: center; }
+        .modal-card { background: #1e293b; border: 1px solid #334155; border-radius: 1rem; padding: 2rem; max-width: 500px; width: 90%; transform: scale(0.95); transition: all 0.3s ease; }
+        .modal-bg.active { display: flex; }
+        .modal-bg.active .modal-card { transform: scale(1); }
+
+        /* Dropzone */
+        .dropzone { border: 2px dashed #475569; border-radius: 0.75rem; background: rgba(15,23,42,0.5); padding: 2rem; text-align: center; position: relative; cursor: pointer; transition: all 0.2s; }
+        .dropzone:hover { border-color: #0ea5e9; background: rgba(14,165,233,0.05); }
+        .dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    </style>
+</head>
+<body class="flex h-screen w-full">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-dark-surface border-r border-dark-border flex flex-col justify-between h-full z-20">
+        <div>
+            <div class="h-20 flex items-center px-6 border-b border-dark-border">
+                <h1 class="text-xl font-bold tracking-wide"><span class="text-white">BARBER</span><span class="text-brand-500">DASH</span></h1>
+            </div>
+            
+            <nav class="p-4 space-y-2">
+                <div class="sidebar-link active" data-target="dashboard">
+                    <i class="fa-solid fa-chart-pie w-5"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="sidebar-link" data-target="appointments">
+                    <i class="fa-solid fa-calendar-check w-5"></i>
+                    <span>Turnos y Reservas</span>
+                </div>
+                <div class="sidebar-link" data-target="staff">
+                    <i class="fa-solid fa-users-gear w-5"></i>
+                    <span>Staff y Comisiones</span>
+                </div>
+                <div class="sidebar-link" data-target="finance">
+                    <i class="fa-solid fa-wallet w-5"></i>
+                    <span>Control Financiero</span>
+                </div>
+                <div class="sidebar-link" data-target="services">
+                    <i class="fa-solid fa-scissors w-5"></i>
+                    <span>Mis Servicios</span>
+                </div>
+                <div class="sidebar-link" data-target="settings">
+                    <i class="fa-solid fa-gear w-5"></i>
+                    <span>Configuración</span>
+                </div>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-dark-border space-y-3">
+            <a id="publicBookingLink" href="public_booking.html" target="_blank" class="flex items-center justify-center gap-2 w-full bg-brand-500/10 text-brand-400 border border-brand-500/30 hover:bg-brand-500 hover:text-white py-2 rounded-lg transition-all font-medium">
+                <i class="fa-solid fa-link"></i> Mi Enlace Público
+            </a>
+            <div class="flex items-center justify-between px-2 pt-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-white" id="sidebarTenantName">Cargando...</p>
+                        <p class="text-xs text-slate-400">Administrador</p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="text-slate-500 hover:text-rose-500 transition-colors" title="Cerrar Sesión">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-full overflow-y-auto bg-dark-bg p-8 relative">
+        
+        <!-- View: Dashboard -->
+        <div id="view-dashboard" class="view-section active">
+            <h2 class="text-2xl font-bold text-white mb-6">Visión General</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="card border-l-4 border-l-brand-500 flex flex-col justify-between">
+                    <p class="text-slate-400 text-sm font-medium">Ingresos del Mes</p>
+                    <h3 class="text-3xl font-bold text-white mt-2">4.5M Gs</h3>
+                    <p class="text-emerald-400 text-xs mt-2"><i class="fa-solid fa-arrow-trend-up"></i> +12% vs mes anterior</p>
+                </div>
+                <div class="card border-l-4 border-l-rose-500 flex flex-col justify-between">
+                    <p class="text-slate-400 text-sm font-medium">Gastos Registrados</p>
+                    <h3 class="text-3xl font-bold text-white mt-2">1.2M Gs</h3>
+                    <p class="text-rose-400 text-xs mt-2"><i class="fa-solid fa-chart-line"></i> Dentro del presupuesto</p>
+                </div>
+                <div class="card border-l-4 border-l-amber-500 flex flex-col justify-between">
+                    <p class="text-slate-400 text-sm font-medium">Turnos Hoy</p>
+                    <h3 class="text-3xl font-bold text-white mt-2">18</h3>
+                    <p class="text-slate-400 text-xs mt-2">4 pendientes de aprobación</p>
+                </div>
+                <div class="card border-l-4 border-l-indigo-500 flex flex-col justify-between">
+                    <p class="text-slate-400 text-sm font-medium">Tasa de Ausencias</p>
+                    <h3 class="text-3xl font-bold text-white mt-2">2.5%</h3>
+                    <p class="text-emerald-400 text-xs mt-2"><i class="fa-solid fa-arrow-trend-down"></i> Mejorando</p>
+                </div>
+            </div>
+
+            <!-- Heatmap Placeholder -->
+            <div class="card">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-fire text-amber-500"></i> Días y Horarios Más Rentables
+                </h3>
+                <div class="h-64 bg-slate-900 rounded-lg border border-slate-700 flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 50% 50%, #0ea5e9 0%, transparent 50%); background-size: 100px 100px;"></div>
+                    <div class="text-center z-10">
+                        <i class="fa-solid fa-chart-bar text-4xl text-slate-600 mb-3"></i>
+                        <p class="text-slate-400 font-medium">Visualización Heatmap en Construcción</p>
+                        <p class="text-sm text-slate-500">Conectando métricas de FastAPI...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Appointments -->
+        <div id="view-appointments" class="view-section">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Gestión de Turnos</h2>
+                <div class="flex gap-2">
+                    <button class="btn-primary" onclick="loadAppointments()"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Pendientes -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-amber-400 mb-4 border-b border-dark-border pb-2">Pendientes de Pago / Aprobación</h3>
+                    <div class="space-y-4" id="pendingAppointmentsList">
+                        <!-- Item -->
+                        <div class="bg-slate-900 border border-amber-500/30 rounded-lg p-4 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-white text-lg">Carlos López</h4>
+                                <p class="text-sm text-slate-400">Corte Clásico + Barba | <span class="text-brand-400">Juan Pérez</span></p>
+                                <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-phone"></i> +595 981 123456</p>
+                                <button class="text-brand-400 text-xs hover:underline mt-2 flex items-center gap-1" onclick="openProofModal('https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300')">
+                                    <i class="fa-solid fa-image"></i> Ver Comprobante
+                                </button>
+                            </div>
+                            <div class="text-right">
+                                <h3 class="text-2xl font-bold text-white mb-2">14:30</h3>
+                                <button class="bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white border border-amber-500/50 px-3 py-1.5 rounded text-sm font-medium transition-colors" onclick="approveAppointment(this, 'Carlos López', '+595981123456')">
+                                    Aprobar Turno
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confirmados -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-emerald-400 mb-4 border-b border-dark-border pb-2">Turnos Confirmados Hoy</h3>
+                    <div class="space-y-4" id="confirmedAppointmentsList">
+                        <!-- Item -->
+                        <div class="bg-slate-900 border border-emerald-500/30 rounded-lg p-4 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-white text-lg">Martín Silva</h4>
+                                <p class="text-sm text-slate-400">Corte Fade | <span class="text-brand-400">Carlos L.</span></p>
+                            </div>
+                            <div class="text-right flex items-center gap-3">
+                                <h3 class="text-2xl font-bold text-white">10:00</h3>
+                                <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Staff -->
+        <div id="view-staff" class="view-section">
+            <h2 class="text-2xl font-bold text-white mb-6">Staff y Comisiones</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="card lg:col-span-1 h-fit">
+                    <h3 class="text-lg font-semibold text-white mb-4 border-b border-dark-border pb-2">Nuevo Profesional</h3>
+                    <form id="addStaffForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Nombre Completo</label>
+                            <input type="text" class="form-input" required placeholder="Ej. Juan Pérez">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Sueldo Base (Gs)</label>
+                            <input type="number" class="form-input" required placeholder="1500000">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Comisión por Servicio (%)</label>
+                            <input type="number" class="form-input" required placeholder="30">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Hora Inicio</label>
+                                <input type="time" class="form-input" required value="09:00">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Hora Fin</label>
+                                <input type="time" class="form-input" required value="18:00">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary w-full mt-2"><i class="fa-solid fa-plus"></i> Registrar Barbero</button>
+                    </form>
+                </div>
+
+                <div class="card lg:col-span-2">
+                    <h3 class="text-lg font-semibold text-white mb-4 border-b border-dark-border pb-2">Rendimiento Hoy</h3>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Profesional</th>
+                                    <th>Horario</th>
+                                    <th>Cortes Hoy</th>
+                                    <th>Comisión Acumulada</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="font-medium text-white flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs">CL</div>
+                                        Carlos López
+                                    </td>
+                                    <td>09:00 - 18:00</td>
+                                    <td><span class="bg-slate-700 px-2 py-1 rounded text-xs">5 cortes</span></td>
+                                    <td class="text-emerald-400 font-semibold">75.000 Gs</td>
+                                    <td><button class="text-slate-400 hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium text-white flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs">JP</div>
+                                        Juan Pérez
+                                    </td>
+                                    <td>10:00 - 20:00</td>
+                                    <td><span class="bg-slate-700 px-2 py-1 rounded text-xs">8 cortes</span></td>
+                                    <td class="text-emerald-400 font-semibold">120.000 Gs</td>
+                                    <td><button class="text-slate-400 hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Finance -->
+        <div id="view-finance" class="view-section">
+            <h2 class="text-2xl font-bold text-white mb-6">Control Financiero</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Egresos -->
+                <div class="card h-fit border-t-4 border-t-rose-500">
+                    <h3 class="text-lg font-semibold text-white mb-4 border-b border-dark-border pb-2"><i class="fa-solid fa-money-bill-transfer text-rose-500"></i> Registrar Gasto</h3>
+                    <form id="addExpenseForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Categoría</label>
+                            <select class="form-select" required>
+                                <option value="" disabled selected>Selecciona una categoría</option>
+                                <option value="alquiler">Alquiler y Servicios</option>
+                                <option value="sueldos">Sueldos y Comisiones</option>
+                                <option value="insumos">Insumos y Productos</option>
+                                <option value="marketing">Marketing y Publicidad</option>
+                                <option value="impuestos">Impuestos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Concepto / Descripción</label>
+                            <input type="text" class="form-input" required placeholder="Ej. Pago de luz ANDE">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Monto (Gs)</label>
+                            <input type="number" class="form-input" required placeholder="150000">
+                        </div>
+                        <button type="submit" class="w-full bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white border border-rose-500/50 py-2.5 rounded-lg transition-colors font-medium">
+                            Registrar Salida
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Resumen Presupuesto -->
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4 border-b border-dark-border pb-2">
+                        <h3 class="text-lg font-semibold text-white">Estado de Presupuesto</h3>
+                        <button class="text-xs text-brand-400 hover:underline">Configurar Limites</button>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <!-- Item -->
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-300">Insumos y Productos</span>
+                                <span class="text-slate-400">800.000 / <span class="text-white">1.000.000 Gs</span></span>
+                            </div>
+                            <div class="w-full bg-slate-700 rounded-full h-2">
+                                <div class="bg-amber-500 h-2 rounded-full" style="width: 80%"></div>
+                            </div>
+                        </div>
+                        <!-- Item -->
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-300">Marketing</span>
+                                <span class="text-slate-400">150.000 / <span class="text-white">500.000 Gs</span></span>
+                            </div>
+                            <div class="w-full bg-slate-700 rounded-full h-2">
+                                <div class="bg-emerald-500 h-2 rounded-full" style="width: 30%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Services -->
+        <div id="view-services" class="view-section">
+            <h2 class="text-2xl font-bold text-white mb-6">Mis Servicios (Catálogo Público)</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Add Form -->
+                <div class="card lg:col-span-1 h-fit border-t-4 border-t-brand-500">
+                    <h3 class="text-lg font-semibold text-white mb-4 border-b border-dark-border pb-2">Nuevo Servicio</h3>
+                    <form id="addServiceForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Nombre del Servicio</label>
+                            <input type="text" class="form-input" id="serviceName" required placeholder="Ej. Corte Clásico">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Precio (Gs)</label>
+                            <input type="number" class="form-input" id="servicePrice" required placeholder="40000">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Imagen de Muestra</label>
+                            <div class="dropzone">
+                                <input type="file" accept="image/*" id="serviceImage" required onchange="document.getElementById('serviceImgLabel').innerText = this.files[0] ? this.files[0].name : 'Arrastra una foto aquí'">
+                                <i class="fa-solid fa-camera text-2xl text-slate-500 mb-2"></i>
+                                <p class="text-xs text-slate-400" id="serviceImgLabel">Arrastra una foto aquí o haz clic</p>
+                            </div>
+                        </div>
+                        <button type="submit" id="btnServiceSubmit" class="btn-primary w-full mt-2">Agregar a Catálogo</button>
+                    </form>
+                </div>
+
+                <!-- Service List -->
+                <div class="card lg:col-span-2">
+                    <h3 class="text-lg font-semibold text-white mb-4 border-b border-dark-border pb-2">Servicios Activos</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                        <!-- Service Card -->
+                        <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 flex gap-4 items-center group">
+                            <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=100" class="w-16 h-16 rounded-lg object-cover border border-slate-600" alt="">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-white">Corte Clásico + Barba</h4>
+                                <p class="text-brand-400 font-medium text-sm">60.000 Gs</p>
+                            </div>
+                            <button class="text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+
+                        <!-- Service Card -->
+                        <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 flex gap-4 items-center group">
+                            <div class="w-16 h-16 rounded-lg bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-500 text-xl">
+                                <i class="fa-solid fa-scissors"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-white">Corte Fade</h4>
+                                <p class="text-brand-400 font-medium text-sm">40.000 Gs</p>
+                            </div>
+                            <button class="text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- View: Configuración -->
+        <div id="view-settings" class="view-section">
+            <h2 class="text-2xl font-bold text-white mb-6">Configuración de Barbería</h2>
+            
+            <div class="card max-w-2xl">
+                <h3 class="text-lg font-bold text-white mb-4">Información y Branding</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">Color de Marca (Acento)</label>
+                        <div class="flex items-center gap-4">
+                            <input type="color" id="tenantThemeColor" class="w-14 h-14 rounded cursor-pointer bg-dark-bg border border-dark-border p-1">
+                            <p class="text-xs text-slate-500">Este color se usará en tu página de reserva pública.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">Datos Bancarios para Transferencias</label>
+                        <textarea id="tenantBankDetails" class="form-input h-24" placeholder="Ej: Banco Familiar | Cuenta: 123456 | CI: 1234567 | A nombre de Juan Perez"></textarea>
+                    </div>
+                    <button onclick="saveSettings()" class="btn-primary w-full"><i class="fa-solid fa-save mr-2"></i> Guardar Configuración</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modals & Toasts -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div id="proofModal" class="modal-bg">
+        <div class="modal-card text-center">
+            <h3 class="text-xl font-bold text-white mb-4">Comprobante de Pago</h3>
+            <img id="proofImage" src="" alt="Comprobante" class="w-full max-h-64 object-contain rounded-lg border border-slate-700 bg-slate-900 mb-6">
+            <button class="btn-outline w-full" onclick="closeProofModal()">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        const API_URL = '/api/tenant';
+        let tenantId = localStorage.getItem('tenant_id') || 1; // Para la demo asumo tenant 1
+        let token = localStorage.getItem('access_token');
+        
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        async function handleApiError(res) {
+            if (res.status === 401 || res.status === 403) {
+                // Not authenticated or not authorized, for demo just login automatically
+                console.warn("Unauthenticated request. Attempting auto-login for demo...");
+                const loginRes = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email: 'admin@vipcentral.com', password: 'password123'})
+                });
+                if(loginRes.ok) {
+                    const data = await loginRes.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('tenant_id', data.tenant_id);
+                    token = data.access_token;
+                    tenantId = data.tenant_id;
+                    window.location.reload();
+                } else {
+                    showToast("No autorizado. Por favor inicie sesión.", "error");
+                }
+                throw new Error("No autorizado");
+            }
+            if (!res.ok) throw new Error("Error en la solicitud");
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.reload();
+        }
+
+        // --- ROUTING / SPA LOGIC ---
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                
+                const targetId = 'view-' + this.getAttribute('data-target');
+                document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+                document.getElementById(targetId).classList.add('active');
+
+                // Load Data based on view
+                if(targetId === 'view-appointments') loadAppointments();
+                if(targetId === 'view-staff') loadStaff();
+                if(targetId === 'view-services') loadServices();
+                if(targetId === 'view-finance') loadExpenses();
+                if(targetId === 'view-settings') loadSettings();
+            });
+        });
+
+        async function loadSettings() {
+            try {
+                // To get tenant details, we can use the backend or simply the public endpoint
+                const res = await fetch(`/api/public/el-rey-barber-shop`); // using a placeholder slug, ideally we get our own tenant slug from backend
+                // Better approach: fetch our own tenant info. Wait, we don't have an endpoint for my tenant info except through superadmin. 
+                // I will add a mock settings fill for now to demonstrate UI.
+                document.getElementById('tenantThemeColor').value = "#0ea5e9";
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function saveSettings() {
+            const bankDetails = document.getElementById('tenantBankDetails').value;
+            const themeColor = document.getElementById('tenantThemeColor').value;
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/settings`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ bank_details: bankDetails, theme_color: themeColor })
+                });
+                await handleApiError(res);
+                showToast("Configuración guardada exitosamente");
+                
+                // Update CSS variables for admin panel if desired
+                document.documentElement.style.setProperty('--tw-colors-brand-500', themeColor);
+            } catch (e) {
+                showToast("Error al guardar configuración", "error");
+            }
+        }
+
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            if (type === 'success') {
+                toast.innerHTML = `<i class="fa-solid fa-circle-check text-brand-500 text-xl"></i> <div><h4 class="font-bold text-white text-sm">Éxito</h4><p class="text-xs text-slate-300">${message}</p></div>`;
+            } else if (type === 'error') {
+                toast.style.borderLeftColor = '#f43f5e';
+                toast.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-500 text-xl"></i> <div><h4 class="font-bold text-white text-sm">Error</h4><p class="text-xs text-slate-300">${message}</p></div>`;
+            }
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // --- MODALS ---
+        function openProofModal(imgUrl) {
+            document.getElementById('proofImage').src = imgUrl || 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300';
+            document.getElementById('proofModal').classList.add('active');
+        }
+        function closeProofModal() {
+            document.getElementById('proofModal').classList.remove('active');
+        }
+
+        // --- APPOINTMENTS ---
+        async function loadAppointments() {
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/appointments`, { headers: getHeaders() });
+                await handleApiError(res);
+                const apps = await res.json();
+
+                const pendingList = document.getElementById('pendingAppointmentsList');
+                const confirmedList = document.getElementById('confirmedAppointmentsList');
+                pendingList.innerHTML = '';
+                confirmedList.innerHTML = '';
+
+                let totalToday = 0;
+                let pendingToday = 0;
+
+                apps.forEach(app => {
+                    const time = new Date(app.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    totalToday++;
+                    
+                    if(app.status === 'pending_approval') {
+                        pendingToday++;
+                        pendingList.innerHTML += `
+                        <div class="bg-slate-900 border border-amber-500/30 rounded-lg p-4 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-white text-lg">${app.client_name}</h4>
+                                <p class="text-sm text-slate-400">Servicio ID: ${app.service_id} | <span class="text-brand-400">Staff ID: ${app.staff_id || 'N/A'}</span></p>
+                                <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-phone"></i> ${app.client_whatsapp}</p>
+                                <button class="text-brand-400 text-xs hover:underline mt-2 flex items-center gap-1" onclick="openProofModal('${app.payment_proof_url}')">
+                                    <i class="fa-solid fa-image"></i> Ver Comprobante
+                                </button>
+                            </div>
+                            <div class="text-right">
+                                <h3 class="text-2xl font-bold text-white mb-2">${time}</h3>
+                                <button class="bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white border border-amber-500/50 px-3 py-1.5 rounded text-sm font-medium transition-colors" onclick="approveAppointment(this, ${app.id}, '${app.client_name}', '${app.client_whatsapp}')">
+                                    Aprobar Turno
+                                </button>
+                            </div>
+                        </div>`;
+                    } else if(app.status === 'booked') {
+                        confirmedList.innerHTML += `
+                        <div class="bg-slate-900 border border-emerald-500/30 rounded-lg p-4 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-white text-lg">${app.client_name}</h4>
+                                <p class="text-sm text-slate-400">Servicio ID: ${app.service_id} | <span class="text-brand-400">Staff ID: ${app.staff_id || 'N/A'}</span></p>
+                            </div>
+                            <div class="text-right flex items-center gap-3">
+                                <h3 class="text-2xl font-bold text-white">${time}</h3>
+                                <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                            </div>
+                        </div>`;
+                    }
+                });
+
+                if(pendingList.innerHTML === '') pendingList.innerHTML = '<p class="text-slate-500 text-sm">No hay turnos pendientes.</p>';
+                if(confirmedList.innerHTML === '') confirmedList.innerHTML = '<p class="text-slate-500 text-sm">No hay turnos confirmados.</p>';
+
+            } catch(e) {
+                showToast("No se pudieron cargar los turnos", "error");
+            }
+        }
+
+        async function approveAppointment(btnElement, id, clientName, clientPhone) {
+            btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btnElement.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/appointments/${id}/status`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify({status: 'booked'})
+                });
+                await handleApiError(res);
+
+                // Lógica Backend ya dispara el whatsapp
+                showToast(`Turno de ${clientName} aprobado.`);
+                loadAppointments(); // refresh lists
+            } catch (e) {
+                showToast("No se pudo aprobar el turno.", "error");
+                btnElement.innerHTML = 'Aprobar Turno';
+                btnElement.disabled = false;
+            }
+        }
+
+        // --- STAFF ---
+        async function loadStaff() {
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/staff`, { headers: getHeaders() });
+                await handleApiError(res);
+                const staff = await res.json();
+                const tbody = document.querySelector('#view-staff tbody');
+                tbody.innerHTML = '';
+                
+                staff.forEach(s => {
+                    const initials = s.name.substring(0,2).toUpperCase();
+                    tbody.innerHTML += `
+                    <tr>
+                        <td class="font-medium text-white flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs">${initials}</div>
+                            ${s.name}
+                        </td>
+                        <td>${s.working_hours || 'N/A'}</td>
+                        <td><span class="bg-slate-700 px-2 py-1 rounded text-xs">${s.commission_percentage}% Com.</span></td>
+                        <td class="text-emerald-400 font-semibold">${s.base_salary} Gs Base</td>
+                        <td><button class="text-slate-400 hover:text-rose-500 transition-colors"><i class="fa-solid fa-trash"></i></button></td>
+                    </tr>`;
+                });
+            } catch(e) {}
+        }
+
+        document.getElementById('addStaffForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                name: e.target[0].value,
+                base_salary: parseFloat(e.target[1].value),
+                commission_percentage: parseFloat(e.target[2].value),
+                working_hours: `${e.target[3].value} - ${e.target[4].value}`,
+                is_active: true
+            };
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/staff`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                await handleApiError(res);
+                showToast("Profesional agregado correctamente.");
+                e.target.reset();
+                loadStaff();
+            } catch(e) {
+                showToast("Error al agregar profesional", "error");
+            }
+        });
+
+        // --- FINANCES (EXPENSES) ---
+        async function loadExpenses() {
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/expenses`, { headers: getHeaders() });
+                await handleApiError(res);
+                const exps = await res.json();
+                let total = 0;
+                exps.forEach(e => total += e.amount);
+                // Just log or update visual total if needed
+                console.log("Total expenses loaded: ", total);
+            } catch(e){}
+        }
+
+        document.getElementById('addExpenseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                category: e.target[0].value,
+                description: e.target[1].value,
+                amount: parseFloat(e.target[2].value)
+            };
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/expenses`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                await handleApiError(res);
+                showToast("Gasto registrado en el libro contable.");
+                e.target.reset();
+                loadExpenses();
+            } catch(e) {
+                showToast("Error al registrar gasto", "error");
+            }
+        });
+
+        // --- SERVICES ---
+        async function loadServices() {
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/services`, { headers: getHeaders() });
+                await handleApiError(res);
+                const srvs = await res.json();
+                const container = document.querySelector('#view-services .grid.grid-cols-1.md\\:grid-cols-2');
+                container.innerHTML = '';
+                
+                srvs.forEach(s => {
+                    const img = s.image_url ? `<img src="${s.image_url}" class="w-16 h-16 rounded-lg object-cover border border-slate-600">` : `<div class="w-16 h-16 rounded-lg bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-500 text-xl"><i class="fa-solid fa-scissors"></i></div>`;
+                    
+                    container.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 flex gap-4 items-center group">
+                        ${img}
+                        <div class="flex-1">
+                            <h4 class="font-bold text-white">${s.name}</h4>
+                            <p class="text-brand-400 font-medium text-sm">${s.price} Gs</p>
+                        </div>
+                        <button class="text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity" onclick="deleteService(${s.id})"><i class="fa-solid fa-trash"></i></button>
+                    </div>`;
+                });
+            } catch(e){}
+        }
+
+        async function deleteService(id) {
+            if(!confirm("¿Eliminar este servicio?")) return;
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/services/${id}`, { 
+                    method: 'DELETE',
+                    headers: {'Authorization': `Bearer ${token}`} 
+                });
+                await handleApiError(res);
+                showToast("Servicio eliminado");
+                loadServices();
+            } catch(e) {}
+        }
+
+        document.getElementById('addServiceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnServiceSubmit');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Subiendo...';
+            btn.disabled = true;
+
+            try {
+                const fileInput = document.getElementById('serviceImage');
+                let imageUrl = null;
+                
+                if (fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    
+                    const uploadRes = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (uploadRes.ok) {
+                        const data = await uploadRes.json();
+                        imageUrl = data.url;
+                    }
+                }
+
+                const payload = {
+                    name: document.getElementById('serviceName').value,
+                    price: parseFloat(document.getElementById('servicePrice').value),
+                    duration_minutes: 30, // default
+                    image_url: imageUrl
+                };
+
+                const res = await fetch(`${API_URL}/${tenantId}/services`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                
+                await handleApiError(res);
+
+                showToast("Servicio publicado en tu catálogo.");
+                e.target.reset();
+                document.getElementById('serviceImgLabel').innerText = 'Arrastra una foto aquí o haz clic';
+                loadServices();
+            } catch (err) {
+                showToast("Error al guardar el servicio.", "error");
+            } finally {
+                btn.innerHTML = 'Agregar a Catálogo';
+                btn.disabled = false;
+            }
+        });
+
+        // Initialize dashboard data if needed
+        loadAppointments();
+    </script>
+</body>
+</html>

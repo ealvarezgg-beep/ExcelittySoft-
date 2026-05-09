@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva - ExcelittySoft Barber</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            400: '#60a5fa',
+                            500: '#3b82f6', /* Blue 500 */
+                            600: '#2563eb',
+                        },
+                        dark: {
+                            bg: '#0f172a', /* slate-900 */
+                            card: '#1e293b', /* slate-800 */
+                            border: '#334155', /* slate-700 */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; }
+        
+        .wizard-card {
+            background-color: #1e293b; border: 1px solid #334155; border-radius: 1rem;
+            padding: 1.5rem; margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .selectable-card {
+            border: 2px solid #334155; background-color: rgba(30, 41, 59, 0.5); border-radius: 0.75rem;
+            cursor: pointer; transition: all 0.2s ease; position: relative; overflow: hidden; padding: 1rem;
+        }
+        .selectable-card:hover { border-color: #475569; transform: translateY(-2px); }
+        .selectable-card.selected { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+        
+        .check-icon {
+            position: absolute; top: 0.75rem; right: 0.75rem; color: #3b82f6;
+            opacity: 0; transform: scale(0.5); transition: all 0.2s ease;
+        }
+        .selectable-card.selected .check-icon { opacity: 1; transform: scale(1); }
+
+        .time-pill {
+            padding: 0.75rem 1rem; border-radius: 9999px; border: 1px solid #334155;
+            background-color: transparent; color: #cbd5e1; text-align: center;
+            cursor: pointer; transition: all 0.2s ease; font-weight: 500;
+        }
+        .time-pill:hover { border-color: #3b82f6; color: #fff; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+        .time-pill.selected { background-color: #3b82f6; border-color: #3b82f6; color: #fff; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+
+        .dropzone {
+            border: 2px dashed #475569; border-radius: 0.75rem; background-color: rgba(30, 41, 59, 0.3);
+            padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; position: relative;
+        }
+        .dropzone:hover { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.05); }
+        .dropzone-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+        .form-input {
+            width: 100%; background-color: #0f172a; border: 1px solid #334155; border-radius: 0.75rem;
+            padding: 0.75rem 1rem; color: #f8fafc; transition: all 0.2s ease;
+        }
+        .form-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+        .toast-alert {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            background-color: #1e293b; border-left: 4px solid #ef4444;
+            color: #f8fafc; padding: 1rem 1.5rem; border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+            transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+        .toast-alert.show { transform: translateX(0); }
+
+        /* SVG Animation */
+        .success-svg { width: 80px; height: 80px; margin: 0 auto 1.5rem; }
+        .success-circle { stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 2; stroke-miterlimit: 10; stroke: #22c55e; fill: none; animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards; }
+        .success-check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; stroke: #22c55e; stroke-width: 3; fill: none; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards; }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+        
+        .modal-bg { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); }
+        .modal-card { transform: scale(0.9); opacity: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .modal-bg.active .modal-card { transform: scale(1); opacity: 1; }
+
+        .service-img { width: 64px; height: 64px; border-radius: 0.5rem; object-fit: cover; border: 1px solid #334155; }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand-500 selection:text-white">
+
+    <main class="max-w-2xl mx-auto px-4 py-12">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">Barbería El Rey</h1>
+            <p class="text-slate-400">Completa tu reserva en pocos pasos</p>
+        </div>
+
+        <form id="bookingForm">
+            
+            <!-- Paso 1: Servicio -->
+            <div class="wizard-card">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-500 flex items-center justify-center font-bold">1</div>
+                    <h3 class="text-xl font-semibold text-white">Selecciona el Servicio</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-4" id="servicesList">
+                    <p class="text-slate-400 text-sm animate-pulse">Cargando catálogo...</p>
+                </div>
+            </div>
+            
+            <!-- Paso 2: Barbero -->
+            <div class="wizard-card">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-500 flex items-center justify-center font-bold">2</div>
+                    <h3 class="text-xl font-semibold text-white">Elige a tu Profesional</h3>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4" id="staffList">
+                     <p class="text-slate-400 text-sm animate-pulse">Cargando staff...</p>
+                </div>
+            </div>
+
+            <!-- Paso 3: Horario -->
+            <div class="wizard-card">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-500 flex items-center justify-center font-bold">3</div>
+                    <h3 class="text-xl font-semibold text-white">Fecha y Horario</h3>
+                </div>
+                
+                <div class="mb-4">
+                    <input type="date" class="form-input" id="bookingDate">
+                </div>
+                
+                <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" id="timeSlots">
+                    <div class="time-pill">09:00</div>
+                    <div class="time-pill">09:30</div>
+                    <div class="time-pill">10:00</div>
+                    <div class="time-pill">14:00</div>
+                    <div class="time-pill">14:30</div>
+                    <div class="time-pill">15:00</div>
+                </div>
+            </div>
+
+            <!-- Paso 4: Datos y Pago -->
+            <div class="wizard-card">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-brand-500/20 text-brand-500 flex items-center justify-center font-bold">4</div>
+                    <h3 class="text-xl font-semibold text-white">Tus Datos y Pago</h3>
+                </div>
+                
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">Nombre Completo</label>
+                        <input type="text" class="form-input" placeholder="Ej. Juan Pérez" required id="clientName">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">Número de WhatsApp</label>
+                        <input type="tel" class="form-input" placeholder="Ej. +595 981 123456" required id="clientPhone">
+                    </div>
+                </div>
+
+                <div class="bg-dark border border-dark-border rounded-xl p-5 mb-4">
+                    <div class="flex items-center gap-2 mb-3 border-b border-dark-border pb-3">
+                        <i class="fa-solid fa-building-columns text-brand-500"></i>
+                        <h4 class="font-semibold text-white">Datos de Transferencia</h4>
+                    </div>
+                    <p class="text-sm text-slate-300 font-mono tracking-wide" id="bankDetails">Cargando...</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-slate-400 mb-2">Comprobante de Pago</label>
+                    <div class="dropzone">
+                        <input type="file" accept="image/*" required id="appointmentProofFile" class="dropzone-input" onchange="document.getElementById('fileNameDisplay').innerText = this.files[0] ? this.files[0].name : 'Haz clic o arrastra tu comprobante aquí'">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-500 mb-2"></i>
+                        <p class="text-sm text-slate-400" id="fileNameDisplay">Haz clic o arrastra tu comprobante aquí</p>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="btnSubmit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-4 rounded-xl shadow-lg transition-all transform hover:-translate-y-1 flex justify-center items-center gap-2 text-lg">
+                <span>Confirmar Reserva</span>
+                <i class="fa-solid fa-check"></i>
+            </button>
+        </form>
+        
+        <!-- Modal de Confirmación -->
+        <div id="successModal" class="fixed inset-0 z-50 hidden items-center justify-center modal-bg">
+            <div class="bg-dark-card border border-dark-border rounded-2xl p-8 max-w-sm w-[90%] mx-auto text-center modal-card shadow-2xl">
+                <!-- Check SVG -->
+                <svg class="success-svg" viewBox="0 0 52 52">
+                    <circle class="success-circle" cx="26" cy="26" r="25" />
+                    <path class="success-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                </svg>
+                
+                <h2 class="text-2xl font-bold text-white mb-2">¡Solicitud Enviada!</h2>
+                <p class="text-slate-400 text-sm mb-6 leading-relaxed">Tu cita se encuentra <strong>Pendiente de Aprobación</strong>. Se confirmará oficialmente apenas el barbero valide tu transferencia.</p>
+                
+                <button onclick="closeModal()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 rounded-xl transition-colors">
+                    Entendido
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Custom Toast Alert -->
+    <div id="toastAlert" class="toast-alert">
+        <i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>
+        <span id="toastAlertText" class="font-medium text-sm">Error.</span>
+    </div>
+
+    <script>
+        // Init Date
+        document.getElementById('bookingDate').valueAsDate = new Date();
+
+        // Get tenant slug from URL query param or fallback
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenantSlug = urlParams.get('tenant') || 'el-rey-barber-shop'; 
+        let selectedServiceId = null;
+        let selectedStaffId = null;
+        let selectedTime = null;
+
+        function showToastError(msg) {
+            const t = document.getElementById('toastAlert');
+            document.getElementById('toastAlertText').innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => { t.classList.remove('show'); }, 4000);
+        }
+
+        async function loadData() {
+            try {
+                // Fetch Tenant Info
+                const resTenant = await fetch(`/api/public/${tenantSlug}`);
+                if (!resTenant.ok) throw new Error("Barbería no encontrada.");
+                const tenant = await resTenant.json();
+
+                document.querySelector('h1').innerText = tenant.name;
+                document.getElementById('bankDetails').innerText = tenant.bank_details || "Contacte al local para los datos bancarios.";
+                
+                // Inject Theme Color
+                if (tenant.theme_color) {
+                    document.documentElement.style.setProperty('--tw-colors-blue-600', tenant.theme_color);
+                    document.documentElement.style.setProperty('--tw-colors-blue-500', tenant.theme_color);
+                    const rgb = hexToRgb(tenant.theme_color);
+                    if (rgb) {
+                        document.documentElement.style.setProperty('--tw-colors-blue-500', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1)`);
+                    }
+                    // Direct overrides
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        .bg-blue-600 { background-color: ${tenant.theme_color} !important; }
+                        .hover\\:bg-blue-500:hover { background-color: ${tenant.theme_color} !important; filter: brightness(1.1); }
+                        .text-brand-400 { color: ${tenant.theme_color} !important; }
+                        .selectable-card.selected { border-color: ${tenant.theme_color} !important; }
+                        .time-pill.selected { background-color: ${tenant.theme_color} !important; color: black !important; border-color: ${tenant.theme_color} !important; }
+                    `;
+                    document.head.appendChild(style);
+                }
+
+                // Fetch Services
+                const resServices = await fetch(`/api/public/${tenantSlug}/services`);
+                const services = await resServices.json();
+
+                const servicesContainer = document.getElementById('servicesList');
+                servicesContainer.innerHTML = '';
+                services.forEach((s) => {
+                    const imgHtml = s.image_url 
+                        ? `<img src="${s.image_url}" class="service-img" alt="${s.name}">` 
+                        : `<div class="service-img bg-slate-800 flex items-center justify-center text-2xl text-slate-500"><i class="fa-solid fa-scissors"></i></div>`;
+                    
+                    servicesContainer.innerHTML += `
+                        <div class="selectable-card" onclick="selectService(this, ${s.id})">
+                            <i class="fa-solid fa-circle-check check-icon text-xl"></i>
+                            <div class="flex items-center gap-4">
+                                ${imgHtml}
+                                <div class="flex-grow">
+                                    <h4 class="font-semibold text-white text-lg">${s.name}</h4>
+                                    <p class="text-brand-400 font-medium">${s.price.toLocaleString()} Gs</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                if(services.length === 0) servicesContainer.innerHTML = '<p class="text-slate-500">No hay servicios disponibles.</p>';
+
+                // Fetch Staff
+                const resStaff = await fetch(`/api/public/${tenantSlug}/staff`);
+                const staffList = await resStaff.json();
+
+                const staffContainer = document.getElementById('staffList');
+                staffContainer.innerHTML = '';
+                staffList.forEach((st) => {
+                    staffContainer.innerHTML += `
+                        <div class="selectable-card text-center" onclick="selectStaff(this, ${st.id})">
+                            <i class="fa-solid fa-circle-check check-icon"></i>
+                            <div class="w-12 h-12 bg-slate-700 rounded-full mx-auto mb-2 flex items-center justify-center text-slate-300">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <h4 class="font-medium text-white">${st.name}</h4>
+                        </div>
+                    `;
+                });
+                if(staffList.length === 0) staffContainer.innerHTML = '<p class="text-slate-500 col-span-2">No hay personal disponible.</p>';
+
+                await fetchAvailableTimes();
+
+            } catch (e) {
+                showToastError(e.message || "Error al cargar la página.");
+            }
+        }
+
+        loadData();
+
+        // Hex to RGB helper
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
+        }
+
+        // Available Times Logic
+        async function fetchAvailableTimes() {
+            const dateStr = document.getElementById('bookingDate').value;
+            if(!dateStr) return;
+            
+            try {
+                const res = await fetch(`/api/public/${tenantSlug}/booked-times?date=${dateStr}`);
+                if(!res.ok) return;
+                const data = await res.json();
+                const bookedTimes = data.booked_times || [];
+
+                document.querySelectorAll('.time-pill').forEach(slot => {
+                    const time = slot.innerText.trim();
+                    if(bookedTimes.includes(time)) {
+                        slot.classList.add('opacity-30', 'cursor-not-allowed', 'bg-red-900/20', 'border-red-900/50', 'text-slate-500');
+                        slot.classList.remove('selected', 'hover:border-slate-500');
+                        slot.style.pointerEvents = 'none';
+                        if(selectedTime === time) selectedTime = null;
+                    } else {
+                        slot.classList.remove('opacity-30', 'cursor-not-allowed', 'bg-red-900/20', 'border-red-900/50', 'text-slate-500');
+                        slot.classList.add('hover:border-slate-500');
+                        slot.style.pointerEvents = 'auto';
+                    }
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        document.getElementById('bookingDate').addEventListener('change', fetchAvailableTimes);
+
+        // Selection Logic
+        function selectService(element, id) {
+            document.querySelectorAll('#servicesList .selectable-card').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedServiceId = id;
+        }
+
+        function selectStaff(element, id) {
+            document.querySelectorAll('#staffList .selectable-card').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedStaffId = id;
+        }
+
+        document.querySelectorAll('.time-pill').forEach(slot => {
+            slot.addEventListener('click', function() {
+                document.querySelectorAll('.time-pill').forEach(el => el.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedTime = this.innerText;
+            });
+        });
+
+        // Form Submission
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Custom Validation
+            if (!selectedServiceId) { return showToastError('Por favor, selecciona un servicio (Paso 1).'); }
+            if (!selectedTime) { return showToastError('Por favor, selecciona un horario (Paso 3).'); }
+
+            const btn = document.getElementById('btnSubmit');
+            const originalBtnHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Procesando...</span>';
+
+            try {
+                // 1. Upload proof
+                const fileInput = document.getElementById('appointmentProofFile');
+                let proofUrl = null;
+                if (fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    const uploadRes = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (!uploadRes.ok) throw new Error('Error al subir comprobante');
+                    const uploadData = await uploadRes.json();
+                    proofUrl = uploadData.url;
+                }
+
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Asegurando turno...</span>';
+
+                // Setup dates
+                const dateStr = document.getElementById('bookingDate').value;
+                const startTimeStr = `${dateStr}T${selectedTime}:00`;
+                const startTime = new Date(startTimeStr);
+                const endTime = new Date(startTime.getTime() + 30*60000); // 30 min aprox
+
+                // 2. Submit booking
+                const payload = {
+                    service_id: selectedServiceId,
+                    staff_id: selectedStaffId, // can be null
+                    client_name: document.getElementById('clientName').value,
+                    client_whatsapp: document.getElementById('clientPhone').value,
+                    start_time: startTime.toISOString(), 
+                    end_time: endTime.toISOString(),
+                    payment_proof_url: proofUrl
+                };
+
+                const bookRes = await fetch(`/api/public/${tenantSlug}/appointments`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                if(!bookRes.ok) throw new Error('No se pudo confirmar la reserva.');
+
+                // Show Modal
+                const modal = document.getElementById('successModal');
+                modal.style.display = 'flex';
+                // Small delay to trigger animation
+                setTimeout(() => { modal.classList.add('active'); }, 10);
+                
+            } catch (err) {
+                showToastError(err.message || 'Hubo un error al procesar tu solicitud.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHtml;
+            }
+        });
+
+        function closeModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('active');
+            setTimeout(() => { 
+                modal.style.display = 'none'; 
+                window.location.reload(); // reset page 
+            }, 400); 
+        }
+    </script>
+</body>
+</html>

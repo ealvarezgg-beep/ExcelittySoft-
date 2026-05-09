@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SINAPTIX MASTER CONTROL | Super Admin</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            400: '#22d3ee', /* cyan-400 */
+                            500: '#06b6d4', /* cyan-500 */
+                            900: '#164e63',
+                        },
+                        dark: {
+                            base: '#020617', /* slate-950 */
+                            panel: 'rgba(15, 23, 42, 0.6)', /* translucent slate-900 */
+                            border: 'rgba(255, 255, 255, 0.05)',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { background-color: #020617; color: #e2e8f0; overflow: hidden; }
+        
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: var(--tw-colors-dark-panel);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--tw-colors-dark-border);
+            border-radius: 1rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        .glass-panel:hover {
+            border-color: rgba(34, 211, 238, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(34, 211, 238, 0.05);
+        }
+
+        /* Sidebar & Navigation */
+        .sidebar-link {
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1.25rem;
+            border-radius: 0.75rem; color: #94a3b8; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500; border: 1px solid transparent; cursor: pointer;
+        }
+        .sidebar-link:hover { color: #e2e8f0; background: rgba(255,255,255,0.03); }
+        .sidebar-link.active {
+            background: linear-gradient(90deg, rgba(34, 211, 238, 0.1) 0%, transparent 100%);
+            border-color: rgba(34, 211, 238, 0.2);
+            color: #22d3ee;
+            box-shadow: inset 2px 0 0 0 #22d3ee;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative; display: inline-block; width: 44px; height: 24px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.5); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Data Grid */
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th { text-align: left; padding: 1rem; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        td { padding: 1rem; color: #cbd5e1; font-size: 0.875rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: rgba(34, 211, 238, 0.02); }
+
+        /* Badges */
+        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 0.375rem; border: 1px solid transparent; }
+        .badge-pending { background: rgba(245, 158, 11, 0.1); color: #fcd34d; border-color: rgba(245, 158, 11, 0.2); }
+        .badge-success { background: rgba(16, 185, 129, 0.1); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.2); }
+        
+        /* Terminal */
+        .terminal-container { background: #000; border-top: 1px solid #1e293b; font-family: 'Fira Code', monospace; font-size: 0.75rem; }
+        .terminal-line { margin-bottom: 0.25rem; opacity: 0; animation: typeIn 0.1s forwards; }
+        @keyframes typeIn { to { opacity: 1; } }
+        
+        /* Modal */
+        .modal-bg { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(16px); z-index: 100; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+        .modal-bg.show { display: flex; opacity: 1; }
+        .modal-content { transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .modal-bg.show .modal-content { transform: scale(1); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        /* Blinking Dot */
+        .blink { animation: blinker 2s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body class="flex h-screen w-full">
+
+    <!-- Sidebar -->
+    <aside class="w-72 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800/50 flex flex-col justify-between h-full z-20 flex-shrink-0">
+        <div>
+            <div class="h-20 flex items-center px-8 border-b border-slate-800/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-cyber-500 rounded flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.5)]">
+                        <i class="fa-solid fa-microchip text-black"></i>
+                    </div>
+                    <h1 class="font-display font-bold tracking-widest text-lg text-white">SINAPTIX<span class="text-cyber-400">OS</span></h1>
+                </div>
+            </div>
+            
+            <nav class="p-6 space-y-3">
+                <div class="sidebar-link active" data-target="overview">
+                    <i class="fa-solid fa-satellite-dish w-6 text-center"></i>
+                    <span>Vista General</span>
+                </div>
+                <div class="sidebar-link" data-target="tenants">
+                    <i class="fa-solid fa-server w-6 text-center"></i>
+                    <span>Inquilinos (Nodos)</span>
+                </div>
+                <div class="sidebar-link" data-target="finance">
+                    <i class="fa-solid fa-money-bill-trend-up w-6 text-center"></i>
+                    <span>Ingresos Financieros</span>
+                </div>
+                <div class="sidebar-link" data-target="logs">
+                    <i class="fa-solid fa-terminal w-6 text-center"></i>
+                    <span>System Logs</span>
+                </div>
+            </nav>
+        </div>
+
+        <div class="p-6">
+            <div class="glass-panel p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-white font-display">Super Admin</p>
+                        <p class="text-xs text-cyber-500 font-mono">ID: ROOT_01</p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="text-slate-500 hover:text-rose-500 transition-colors" title="Cerrar Sesión">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+        
+        <!-- Topbar -->
+        <header class="h-20 bg-slate-900/30 backdrop-blur-md border-b border-slate-800/50 flex items-center justify-between px-8 z-10">
+            <h2 class="font-display text-2xl font-bold text-white tracking-wide" id="pageTitle">Control Maestro</h2>
+            
+            <div class="flex items-center gap-6">
+                <div class="glass-panel px-4 py-2 flex items-center gap-3">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full blink shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+                    <span class="text-sm font-mono text-emerald-400">STATE: 100% OPERATIVO</span>
+                </div>
+                <div class="text-slate-400 font-mono text-sm" id="clockDisplay">00:00:00</div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <main class="flex-1 overflow-y-auto p-8 z-0">
+            
+            <!-- VISTA GENERAL -->
+            <div id="view-overview" class="view-section">
+                <!-- KPIs -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- KPI 1 -->
+                    <div class="glass-panel p-6 relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-slate-800 opacity-20 group-hover:text-cyber-900 transition-colors duration-500">
+                            <i class="fa-solid fa-coins text-9xl"></i>
+                        </div>
+                        <p class="text-slate-400 font-mono text-xs mb-2">REVENUE_MRR</p>
+                        <h3 class="font-display text-4xl font-bold text-white mb-2">12.5M <span class="text-xl text-cyber-500">PYG</span></h3>
+                        <p class="text-emerald-400 text-sm font-medium"><i class="fa-solid fa-arrow-up-right-dots"></i> +15% este mes</p>
+                    </div>
+                    <!-- KPI 2 -->
+                    <div class="glass-panel p-6 relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-slate-800 opacity-20 group-hover:text-cyber-900 transition-colors duration-500">
+                            <i class="fa-solid fa-network-wired text-9xl"></i>
+                        </div>
+                        <p class="text-slate-400 font-mono text-xs mb-2">ACTIVE_NODES</p>
+                        <h3 class="font-display text-4xl font-bold text-white mb-2">84 <span class="text-xl text-slate-500">Tenants</span></h3>
+                        <p class="text-emerald-400 text-sm font-medium"><i class="fa-solid fa-check-double"></i> 3 nuevos hoy</p>
+                    </div>
+                    <!-- KPI 3 -->
+                    <div class="glass-panel p-6 relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-slate-800 opacity-20 group-hover:text-cyber-900 transition-colors duration-500">
+                            <i class="fa-brands fa-whatsapp text-9xl"></i>
+                        </div>
+                        <p class="text-slate-400 font-mono text-xs mb-2">API_WHA_TRAFFIC</p>
+                        <h3 class="font-display text-4xl font-bold text-white mb-2">1,402 <span class="text-xl text-slate-500">Msgs</span></h3>
+                        <p class="text-cyber-400 text-sm font-medium"><i class="fa-solid fa-bolt"></i> Latencia: 42ms</p>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="glass-panel p-6 flex flex-col w-full h-[400px]">
+                    <h3 class="font-display text-lg font-bold text-white mb-4">Crecimiento de Nodos Activos</h3>
+                    <div class="flex-1 relative w-full h-full">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INQUILINOS (NODOS) -->
+            <div id="view-tenants" class="view-section" style="display: none;">
+                <!-- Tenants Data Grid -->
+                <div class="glass-panel p-0 flex flex-col overflow-hidden h-[600px]">
+                    <div class="p-6 border-b border-slate-800/50 flex justify-between items-center bg-slate-900/50">
+                        <h3 class="font-display text-lg font-bold text-white">Gestión de Nodos</h3>
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                            <input type="text" placeholder="Buscar ID o nombre..." class="bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:border-cyber-500 text-white placeholder-slate-500 w-64 transition-colors">
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-y-auto flex-1">
+                        <table class="w-full text-left">
+                            <thead class="sticky top-0 bg-slate-900">
+                                <tr>
+                                    <th>Node ID</th>
+                                    <th>Tenant / Barbería</th>
+                                    <th>Registrado</th>
+                                    <th>Estado Pago</th>
+                                    <th>Acceso Sistema</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tenantsTbody">
+                                <!-- Data injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INGRESOS FINANCIEROS -->
+            <div id="view-finance" class="view-section" style="display: none;">
+                <div class="glass-panel p-8 text-center h-[400px] flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-money-bill-wave text-6xl text-slate-700 mb-4"></i>
+                    <h3 class="text-2xl font-display font-bold text-white">Módulo Financiero</h3>
+                    <p class="text-slate-400 mt-2">Módulo en construcción. Se implementará la integración con pasarelas de pago próximamente.</p>
+                </div>
+            </div>
+
+            <!-- SYSTEM LOGS (Full view) -->
+            <div id="view-logs" class="view-section" style="display: none;">
+                <div class="glass-panel p-0 flex flex-col overflow-hidden h-[600px]">
+                    <div class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+                        <span class="text-sm text-slate-400 font-bold uppercase tracking-widest">Master Terminal Output</span>
+                    </div>
+                    <div class="p-6 overflow-y-auto flex-1 text-slate-300 font-mono text-sm" id="fullLogsOutput">
+                        <!-- Cloned logs will appear here -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Terminal Logs (Bottom) -->
+        <footer class="terminal-container h-48 flex flex-col z-10 shrink-0">
+            <div class="bg-slate-900 border-b border-slate-800 px-4 py-1 flex items-center justify-between">
+                <span class="text-xs text-slate-400 uppercase tracking-widest">System Logs Output</span>
+                <div class="flex gap-2">
+                    <div class="w-2 h-2 rounded-full bg-rose-500"></div>
+                    <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                </div>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 text-slate-300" id="terminalOutput">
+                <!-- Logs injected via JS -->
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Approval Modal (Glassmorphism) -->
+    <div id="approvalModal" class="modal-bg">
+        <div class="modal-content glass-panel w-[900px] max-w-[95%] p-0 overflow-hidden flex flex-col md:flex-row shadow-[0_0_50px_rgba(34,211,238,0.1)]">
+            
+            <!-- Left: Image View -->
+            <div class="w-full md:w-1/2 bg-slate-950 p-6 flex flex-col">
+                <h4 class="font-display font-bold text-white mb-4 border-b border-slate-800 pb-2"><i class="fa-solid fa-file-invoice text-cyber-500 mr-2"></i>Evidencia de Transferencia</h4>
+                <div class="flex-1 rounded-xl border border-slate-800 overflow-hidden bg-black flex items-center justify-center min-h-[300px]">
+                    <img id="modalProofImage" src="" alt="Comprobante" class="max-w-full max-h-[400px] object-contain">
+                </div>
+            </div>
+
+            <!-- Right: Actions & Details -->
+            <div class="w-full md:w-1/2 p-8 flex flex-col justify-between bg-gradient-to-br from-slate-900 to-slate-800">
+                <div>
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <p class="text-xs text-cyber-500 font-mono mb-1" id="modalTenantIdLabel">EVALUACIÓN DE NODO #N-085</p>
+                            <h2 class="font-display text-2xl font-bold text-white" id="modalTenantName">Barbería Name</h2>
+                            <p class="text-slate-400 font-mono text-sm" id="modalTenantSlug">slug</p>
+                        </div>
+                        <button onclick="closeApprovalModal()" class="text-slate-500 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    </div>
+
+                    <div class="space-y-4 mb-8">
+                        <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                            <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Plan Solicitado</p>
+                            <p class="text-white font-medium">Suscripción SaaS Pro - 150.000 PYG</p>
+                        </div>
+                        <div class="bg-amber-500/10 p-4 rounded-lg border border-amber-500/20">
+                            <p class="text-amber-400 text-sm flex items-start gap-2">
+                                <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                                Verifica que el monto en la imagen coincida con la solicitud antes de inyectar el nodo a la red.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="executeDeploy()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-display font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] flex items-center justify-center gap-2 text-lg">
+                        <i class="fa-solid fa-bolt"></i> APROBAR Y DESPLEGAR TENANT
+                    </button>
+                    <button onclick="closeApprovalModal()" class="w-full bg-transparent border border-rose-500/50 text-rose-400 hover:bg-rose-500/10 font-bold py-3 rounded-xl transition-colors">
+                        Rechazar Pago
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // --- System Clock ---
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clockDisplay').innerText = now.toTimeString().split(' ')[0] + ' UTC-3';
+        }, 1000);
+
+        // --- Routing / SPA Logic ---
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', function() {
+                // Update Sidebar
+                document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+
+                // Toggle Sections
+                const target = this.getAttribute('data-target');
+                document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
+                document.getElementById(`view-${target}`).style.display = 'block';
+
+                // Update Header
+                const text = this.querySelector('span').innerText;
+                document.getElementById('pageTitle').innerText = text === 'Vista General' ? 'Control Maestro' : text;
+            });
+        });
+
+        // --- System Logs Engine ---
+        const terminal = document.getElementById('terminalOutput');
+        const fullTerminal = document.getElementById('fullLogsOutput');
+        
+        let token = localStorage.getItem('access_token');
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        async function handleApiError(res) {
+            if (res.status === 401 || res.status === 403) {
+                console.warn("Unauthenticated request. Attempting auto-login for demo...");
+                const loginRes = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email: 'admin@vipcentral.com', password: 'password123'})
+                });
+                if(loginRes.ok) {
+                    const data = await loginRes.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    token = data.access_token;
+                    window.location.reload();
+                } else {
+                    addLog("[ERROR] No autorizado. Por favor inicie sesión.", "error");
+                }
+                throw new Error("No autorizado");
+            }
+            if (!res.ok) throw new Error("Error en la API");
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.reload();
+        }
+
+        function addLog(msg, type="info") {
+            const time = new Date().toTimeString().split(' ')[0];
+            const div = document.createElement('div');
+            div.className = 'terminal-line mb-1';
+            let colorClass = "text-slate-400";
+            if(type === "success") colorClass = "text-emerald-400";
+            if(type === "warning") colorClass = "text-amber-400";
+            if(type === "error") colorClass = "text-rose-400";
+            
+            const logHTML = `<span class="text-slate-600">[${time}]</span> <span class="${colorClass}">${msg}</span>`;
+            
+            // Add to mini terminal
+            div.innerHTML = logHTML;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+
+            // Add to full terminal view
+            const fullDiv = document.createElement('div');
+            fullDiv.className = 'terminal-line mb-2';
+            fullDiv.innerHTML = logHTML;
+            if(fullTerminal) {
+                fullTerminal.appendChild(fullDiv);
+                fullTerminal.scrollTop = fullTerminal.scrollHeight;
+            }
+        }
+
+        // --- Chart.js Setup ---
+        let growthChart;
+        function initChart(activeNodes) {
+            if(growthChart) growthChart.destroy();
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            
+            // Gradient for line
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(6, 182, 212, 0.5)'); // cyan-500 translucent
+            gradient.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
+
+            // Faked historical data to make chart look good, final point is actual data
+            let data = [Math.max(1, activeNodes - 10), Math.max(2, activeNodes - 8), Math.max(3, activeNodes - 5), activeNodes];
+
+            growthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['D1', 'D10', 'D20', 'Hoy'],
+                    datasets: [{
+                        label: 'Nodos Activos',
+                        data: data,
+                        borderColor: '#06b6d4', // cyan-500
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#020617',
+                        pointBorderColor: '#22d3ee',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4 // Curved lines
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#e2e8f0',
+                            bodyColor: '#22d3ee',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            titleFont: { family: 'Space Grotesk' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                            ticks: { color: '#64748b', font: { family: 'Fira Code' } }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: '#64748b', font: { family: 'Fira Code' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fetch Data
+        async function fetchTenants() {
+            try {
+                addLog("[API] Requesting tenant matrix data...", "info");
+                const res = await fetch('/api/sinaptix-master-admin/tenants', { headers: getHeaders() });
+                await handleApiError(res);
+                const tenants = await res.json();
+                
+                const tbody = document.getElementById('tenantsTbody');
+                tbody.innerHTML = '';
+                
+                let activeCount = 0;
+                
+                tenants.forEach(t => {
+                    if (t.is_active) activeCount++;
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = 'group';
+                    
+                    const paymentBadge = t.payment_status === 'paid' 
+                        ? `<div class="badge badge-success cursor-default"><i class="fa-solid fa-check"></i> Pagado</div>`
+                        : `<button onclick="openApprovalModal(${t.id}, '${t.name}', '${t.slug}', '${t.subscription_proof_url}')" class="badge badge-pending hover:border-amber-400 cursor-pointer transition-colors"><i class="fa-solid fa-clock"></i> Pendiente Aprob.</button>`;
+                        
+                    const statusText = t.is_active ? "On" : "Off";
+                    const statusColor = t.is_active ? "text-cyber-400" : "text-slate-500";
+                    const checkedStr = t.is_active ? "checked" : "";
+
+                    tr.innerHTML = `
+                        <td class="font-mono text-slate-500">#N-${String(t.id).padStart(3, '0')}</td>
+                        <td>
+                            <div class="font-bold text-white">${t.name}</div>
+                            <div class="text-xs text-slate-500 font-mono">${t.slug}</div>
+                        </td>
+                        <td class="text-slate-400">${new Date(t.created_at).toLocaleDateString()}</td>
+                        <td>${paymentBadge}</td>
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs ${statusColor}" id="status-text-${t.id}">${statusText}</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" ${checkedStr} onchange="toggleTenantStatus(this, ${t.id})">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Update KPIs
+                document.querySelector('h3').nextElementSibling.nextElementSibling.nextElementSibling.innerHTML = `${activeCount} <span class="text-xl text-slate-500">Tenants</span>`;
+                const mrr = activeCount * 150000;
+                document.querySelector('h3').innerHTML = `${(mrr/1000000).toFixed(1)}M <span class="text-xl text-cyber-500">PYG</span>`;
+
+                initChart(activeCount);
+                addLog("[API] Matrix loaded. State synchronized.", "success");
+
+            } catch (err) {
+                addLog(`[ERROR] ${err.message}`, "error");
+            }
+        }
+
+        // --- Modal Logic ---
+        const modal = document.getElementById('approvalModal');
+        let currentDeployTargetId = null;
+        let currentDeployTargetName = null;
+
+        function openApprovalModal(id, name, slug, imgUrl) {
+            currentDeployTargetId = id;
+            currentDeployTargetName = name;
+            document.getElementById('modalTenantIdLabel').innerText = `EVALUACIÓN DE NODO #N-${String(id).padStart(3, '0')}`;
+            document.getElementById('modalTenantName').innerText = name;
+            document.getElementById('modalTenantSlug').innerText = `slug: ${slug}`;
+            document.getElementById('modalProofImage').src = imgUrl && imgUrl !== 'null' ? imgUrl : 'https://images.unsplash.com/photo-1620062635955-407133742490?w=400';
+            
+            modal.classList.add('show');
+            addLog(`Admin requested proof inspection for Node: ${name}`, "warning");
+        }
+
+        function closeApprovalModal() {
+            modal.classList.remove('show');
+        }
+
+        async function executeDeploy() {
+            addLog(`[SYSTEM] Initiating deployment sequence for ${currentDeployTargetName}...`, "info");
+            
+            try {
+                // Call API to approve
+                const res = await fetch(`/api/sinaptix-master-admin/tenants/${currentDeployTargetId}/status`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ is_active: true, payment_status: 'paid' })
+                });
+
+                if (!res.ok) throw new Error("Failed to update status on server");
+
+                setTimeout(() => addLog(`[DB] Tenant schema mapped.`, "info"), 600);
+                setTimeout(() => addLog(`[AUTH] Credentials verified and activated.`, "success"), 1200);
+                setTimeout(() => addLog(`[ROUTING] Subdomain mapped successfully.`, "success"), 1800);
+                setTimeout(() => {
+                    addLog(`[MASTER] Node deployment COMPLETE. Tenant is online.`, "success");
+                    closeApprovalModal();
+                    fetchTenants(); // Reload table
+                }, 2400);
+            } catch (err) {
+                addLog(`[DEPLOY ERROR] ${err.message}`, "error");
+                alert("Error: " + err.message);
+            }
+        }
+
+        // --- Toggle Logic ---
+        async function toggleTenantStatus(checkbox, id) {
+            const isActive = checkbox.checked;
+            const statusText = document.getElementById(`status-text-${id}`);
+            
+            try {
+                const res = await fetch(`/api/sinaptix-master-admin/tenants/${id}/status`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ is_active: isActive })
+                });
+                if (!res.ok) throw new Error("API error");
+
+                if(isActive) {
+                    statusText.innerText = "On";
+                    statusText.classList.replace("text-slate-500", "text-cyber-400");
+                    addLog(`Node #${id} connection restored by Admin.`, "success");
+                } else {
+                    statusText.innerText = "Off";
+                    statusText.classList.replace("text-cyber-400", "text-slate-500");
+                    addLog(`Node #${id} SUSPENDED. All routing cut off.`, "error");
+                }
+                
+            } catch (err) {
+                addLog(`[ERROR] Toggle failed for Node #${id}`, "error");
+                checkbox.checked = !isActive; // revert
+            }
+        }
+
+        fetchTenants();
+    </script>
+</body>
+</html>

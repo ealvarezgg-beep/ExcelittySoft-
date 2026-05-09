@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExcelittySoft Barber | Ecosistema Operativo Premium</title>
+    <meta name="description" content="Automatiza tu barbería, gestiona tu staff y aumenta tus ingresos con ExcelittySoft.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- AOS CSS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: { DEFAULT: '#D4AF37', hover: '#F3E5AB' },
+                        dark: { DEFAULT: '#0a0a0a', secondary: '#111111' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles for Toast and File Input */
+        body { background-color: #0a0a0a; color: #f3f4f6; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .toast {
+            position: fixed; top: 20px; right: 20px; padding: 1.25rem; border-radius: 12px;
+            background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px);
+            border: 1px solid #D4AF37; display: none; z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .toast.show { transform: translateX(0); }
+        
+        .file-upload-wrapper { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; border: 2px dashed rgba(255,255,255,0.2); border-radius: 0.75rem; background: rgba(0,0,0,0.2); transition: all 0.3s ease; cursor: pointer; }
+        .file-upload-wrapper:hover { border-color: #D4AF37; background: rgba(212,175,55,0.05); }
+        .file-upload-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    </style>
+</head>
+<body class="antialiased selection:bg-gold selection:text-black">
+
+    <!-- Sticky Navbar -->
+    <header class="fixed w-full top-0 z-50 bg-dark/80 backdrop-blur-md border-b border-white/10 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <h2 class="font-display font-bold text-2xl tracking-widest text-white">
+                EXCELITTY<span class="text-gold">SOFT</span>
+            </h2>
+            <nav class="hidden md:flex items-center gap-6">
+                <a href="#features" class="text-sm font-medium text-gray-300 hover:text-gold transition-colors">Características</a>
+                <a href="#checkout" class="bg-gold hover:bg-gold-hover text-black font-semibold px-6 py-2.5 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-[0_0_15px_rgba(212,175,55,0.3)]">
+                    Empezar Ahora
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Parallax Hero Section -->
+        <section class="relative min-h-screen flex items-center justify-center bg-fixed bg-center bg-cover pt-20" style="background-image: url('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1920&q=80');">
+            <div class="absolute inset-0 bg-gradient-to-b from-dark/90 via-dark/80 to-dark"></div>
+            
+            <div class="relative z-10 text-center px-4 max-w-4xl mx-auto" data-aos="fade-up" data-aos-duration="1000">
+                <div class="inline-block mb-6 px-4 py-1.5 rounded-full border border-gold/30 bg-gold/10 backdrop-blur-sm text-gold text-sm font-medium tracking-wide">
+                    EL ESTÁNDAR DE LA INDUSTRIA 2026
+                </div>
+                <h1 class="font-display text-5xl md:text-7xl font-bold text-white leading-tight mb-6">
+                    El Ecosistema Operativo para <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-200">Barberías de Élite</span>
+                </h1>
+                <p class="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+                    Agenda automatizada, control financiero preciso, gestión de comisiones de staff y notificaciones automáticas. La arquitectura SaaS diseñada para escalar tu negocio sin límites.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="#checkout" class="bg-gold hover:bg-gold-hover text-black font-semibold text-lg px-8 py-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 shadow-[0_10px_40px_rgba(212,175,55,0.4)]">
+                        Desbloquear ExcelittySoft
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Banner -->
+        <section class="border-y border-white/5 bg-white/[0.02] backdrop-blur-sm py-16 relative z-20 -mt-2">
+            <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-white/10">
+                <div data-aos="fade-up" data-aos-delay="100">
+                    <h3 class="font-display text-4xl md:text-5xl font-bold text-white mb-2">+500</h3>
+                    <p class="text-gold tracking-widest text-sm uppercase font-semibold">Salones Activos</p>
+                </div>
+                <div class="pt-8 md:pt-0" data-aos="fade-up" data-aos-delay="200">
+                    <h3 class="font-display text-4xl md:text-5xl font-bold text-white mb-2">+150K</h3>
+                    <p class="text-gold tracking-widest text-sm uppercase font-semibold">Turnos Procesados</p>
+                </div>
+                <div class="pt-8 md:pt-0" data-aos="fade-up" data-aos-delay="300">
+                    <h3 class="font-display text-4xl md:text-5xl font-bold text-white mb-2">99.9%</h3>
+                    <p class="text-gold tracking-widest text-sm uppercase font-semibold">SLA Garantizado</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Premium Features Grid -->
+        <section id="features" class="py-24 max-w-7xl mx-auto px-6 relative">
+            <!-- Decorative blur -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gold/5 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+
+            <div class="text-center mb-20" data-aos="fade-up">
+                <h2 class="font-display text-3xl md:text-5xl font-bold text-white mb-6">Ingeniería para el Crecimiento</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-lg">No somos una simple agenda. Somos el motor operativo y financiero que respalda las operaciones diarias de las mejores barberías del país.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="glass-card rounded-2xl p-8 hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-300 group" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-14 h-14 rounded-xl bg-gold/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-calendar-check text-2xl text-gold"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Motor de Reservas Autónomo</h3>
+                    <p class="text-gray-400 leading-relaxed">Tus clientes navegan tu galería, eligen a su barbero preferido y pagan. El turno se bloquea automáticamente al confirmar el pago en tu panel.</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="glass-card rounded-2xl p-8 hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-300 group" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-14 h-14 rounded-xl bg-gold/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-users-gear text-2xl text-gold"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Liquidación de Staff & Comisiones</h3>
+                    <p class="text-gray-400 leading-relaxed">Automatiza el pago de tu staff. Asigna sueldos base y calcula de forma exacta y en tiempo real las comisiones por cada servicio completado.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="glass-card rounded-2xl p-8 hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-300 group" data-aos="fade-up" data-aos-delay="300">
+                    <div class="w-14 h-14 rounded-xl bg-gold/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-chart-line text-2xl text-gold"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Inteligencia Financiera</h3>
+                    <p class="text-gray-400 leading-relaxed">Dashboard centralizado. Monitorea ingresos al instante y categoriza gastos (alquiler, insumos) para conocer el margen real de tu negocio.</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="glass-card rounded-2xl p-8 hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-300 group" data-aos="fade-up" data-aos-delay="400">
+                    <div class="w-14 h-14 rounded-xl bg-gold/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-brands fa-whatsapp text-2xl text-gold"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Infraestructura WhatsApp</h3>
+                    <p class="text-gray-400 leading-relaxed">Webhooks integrados. Dispara alertas de solicitud de turno, confirmaciones instantáneas y recordatorios para reducir la tasa de ausencias a cero.</p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="glass-card rounded-2xl p-8 hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-300 group" data-aos="fade-up" data-aos-delay="500">
+                    <div class="w-14 h-14 rounded-xl bg-gold/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-images text-2xl text-gold"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Showcase & Catálogo Visual</h3>
+                    <p class="text-gray-400 leading-relaxed">Vende por los ojos. Adjunta imágenes de alta calidad a tus servicios y crea un portafolio público para que tu trabajo hable por sí solo.</p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="glass-card rounded-2xl p-8 hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-300 group" data-aos="fade-up" data-aos-delay="600">
+                    <div class="w-14 h-14 rounded-xl bg-gold/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-shield-halved text-2xl text-gold"></i>
+                    </div>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Aislamiento de Datos Nivel Bancario</h3>
+                    <p class="text-gray-400 leading-relaxed">Arquitectura Multi-Tenant garantizada. Tu base de datos de clientes, finanzas y métricas es inviolable y completamente aislada de otros locatarios.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Checkout / Registration Split UI -->
+        <section id="checkout" class="py-24 bg-dark-secondary relative border-t border-white/5">
+            <div class="max-w-6xl mx-auto px-6">
+                
+                <div class="text-center mb-16" data-aos="fade-up">
+                    <h2 class="font-display text-3xl md:text-5xl font-bold text-white mb-4">Inicia tu Transformación</h2>
+                    <p class="text-gray-400 text-lg">Activa tu tenant exclusivo y comienza a operar en el más alto nivel hoy mismo.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                    
+                    <!-- Left Column: Checkout Summary (Ticket) -->
+                    <div class="glass-card rounded-2xl p-8 sticky top-32" data-aos="fade-right">
+                        <div class="border-b border-white/10 pb-6 mb-6">
+                            <h3 class="font-display text-2xl text-white font-bold mb-2">Resumen de Inversión</h3>
+                            <p class="text-sm text-gray-400">Suscripción SaaS Nivel Pro (Mensual)</p>
+                        </div>
+                        
+                        <div class="flex justify-between items-end mb-8">
+                            <span class="text-gray-300">Total a Pagar</span>
+                            <span class="font-display text-4xl text-gold font-bold">150.000 Gs</span>
+                        </div>
+
+                        <div class="bg-black/40 rounded-xl p-6 border border-white/5 mb-6">
+                            <div class="flex items-center gap-3 mb-4">
+                                <i class="fa-solid fa-building-columns text-gold"></i>
+                                <h4 class="font-bold text-white">Datos de Transferencia</h4>
+                            </div>
+                            <div class="space-y-3 text-sm text-gray-300 font-mono">
+                                <div class="flex justify-between"><span>Beneficiario:</span> <span class="text-white">Sinaptix Project</span></div>
+                                <div class="flex justify-between"><span>Entidad:</span> <span class="text-white">Banco Familiar</span></div>
+                                <div class="flex justify-between"><span>Cuenta N°:</span> <span class="text-white tracking-widest">1234567</span></div>
+                                <div class="flex justify-between"><span>CI/RUC:</span> <span class="text-white tracking-widest">4567890</span></div>
+                            </div>
+                        </div>
+
+                        <ul class="space-y-3 text-sm text-gray-400">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Soporte Prioritario 24/7</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Actualizaciones Inclusivas</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Acceso Multi-Dispositivo</li>
+                        </ul>
+                    </div>
+
+                    <!-- Right Column: Form -->
+                    <div class="glass-card rounded-2xl p-8" data-aos="fade-left">
+                        <form id="registerForm" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Nombre de tu Barbería</label>
+                                <input type="text" required id="barberName" placeholder="Ej. Barbería El Rey" 
+                                    class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Correo del Administrador</label>
+                                <input type="email" required id="barberEmail" placeholder="admin@elrey.com"
+                                    class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Contraseña Maestra</label>
+                                <input type="password" required id="barberPassword" placeholder="••••••••"
+                                    class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors">
+                            </div>
+
+                            <div class="pt-4">
+                                <label class="block text-sm font-medium text-gray-300 mb-3">Adjuntar Comprobante de Transferencia</label>
+                                <div class="file-upload-wrapper">
+                                    <i class="fa-solid fa-cloud-arrow-up text-4xl text-gold/50 mb-3"></i>
+                                    <span class="text-sm text-gray-400 text-center" id="fileNameDisplay">Arrastra la imagen o haz clic para explorar</span>
+                                    <input type="file" accept="image/*" required id="subscriptionProofFile" class="file-upload-input" onchange="document.getElementById('fileNameDisplay').innerText = this.files[0] ? this.files[0].name : 'Arrastra la imagen o haz clic para explorar'">
+                                </div>
+                            </div>
+
+                            <button type="submit" id="btnSubmit" 
+                                class="w-full bg-gold hover:bg-gold-hover text-black font-bold text-lg py-4 rounded-xl mt-6 transition-all duration-300 flex justify-center items-center gap-2">
+                                <span>Completar Activación</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="bg-black py-12 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h2 class="font-display font-bold text-xl tracking-widest text-white mb-4">
+                EXCELITTY<span class="text-gold">SOFT</span>
+            </h2>
+            <p class="text-gray-500 text-sm">&copy; 2026 Developed by Sinaptix Project. All systems operational.</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <div class="flex items-start gap-4">
+            <div id="toastIcon" class="mt-1 text-gold"><i class="fa-solid fa-circle-info text-xl"></i></div>
+            <div>
+                <h4 class="font-bold text-white mb-1" id="toastTitle">Notificación</h4>
+                <p class="text-sm text-gray-300 leading-relaxed" id="toastMessage">Mensaje</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize Animate On Scroll
+        AOS.init({
+            once: true,
+            offset: 50,
+            duration: 800,
+            easing: 'ease-out-cubic',
+        });
+
+        // Toast System
+        function showToast(title, message, isError = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMessage').innerText = message;
+            
+            if(isError) {
+                toast.style.borderColor = '#ff4c4c';
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-xl text-red-500"></i>';
+            } else {
+                toast.style.borderColor = '#D4AF37';
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-xl text-gold"></i>';
+            }
+            
+            toast.style.display = 'block';
+            // Trigger reflow
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            
+            setTimeout(() => { 
+                toast.classList.remove('show');
+                setTimeout(() => { toast.style.display = 'none'; }, 300);
+            }, 6000);
+        }
+
+        // Form Submission Logic
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            const originalBtnHtml = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Encriptando Archivos...</span>';
+
+            try {
+                // 1. Upload the file
+                const fileInput = document.getElementById('subscriptionProofFile');
+                const file = fileInput.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadRes.ok) throw new Error('Falló la validación del comprobante.');
+                const uploadData = await uploadRes.json();
+                const proofUrl = uploadData.url;
+
+                btn.innerHTML = '<i class="fa-solid fa-server fa-fade"></i> <span>Aprovisionando Tenant...</span>';
+
+                // 2. Register with the uploaded URL
+                const payload = {
+                    barberName: document.getElementById('barberName').value,
+                    barberEmail: document.getElementById('barberEmail').value,
+                    barberPassword: document.getElementById('barberPassword').value,
+                    subscriptionProofUrl: proofUrl
+                };
+
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    showToast('Despliegue Exitoso', 'Tu ambiente seguro ha sido creado. Esperando autorización criptográfica del Super Admin.');
+                    document.getElementById('registerForm').reset();
+                    document.getElementById('fileNameDisplay').innerText = 'Arrastra la imagen o haz clic para explorar';
+                } else {
+                    const data = await response.json();
+                    showToast('Excepción de Sistema', data.detail || 'Ocurrió un error en el aprovisionamiento.', true);
+                }
+            } catch (error) {
+                showToast('Falla de Red', 'Conexión rechazada: ' + error.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHtml;
+            }
+        });
+    </script>
+</body>
+</html>

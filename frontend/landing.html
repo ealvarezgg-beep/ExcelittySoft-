@@ -76,6 +76,15 @@
                     Empezar Ahora
                 </a>
             </nav>
+            <button class="md:hidden text-white hover:text-gold transition-colors" id="mobileMenuBtn">
+                <i class="fa-solid fa-bars text-2xl"></i>
+            </button>
+        </div>
+        <!-- Mobile Nav Menu -->
+        <div class="md:hidden hidden bg-dark-card border-b border-white/10 px-6 py-4 space-y-4 shadow-xl" id="mobileMenu">
+            <a href="#features" class="block text-gray-300 hover:text-gold font-medium">Características</a>
+            <a href="/app/login.html" class="block text-gray-300 hover:text-gold font-medium"><i class="fa-solid fa-user text-xs mr-1"></i> Iniciar Sesión</a>
+            <a href="#checkout" class="block bg-gold text-black text-center font-semibold px-4 py-3 rounded-lg w-full">Empezar Ahora</a>
         </div>
     </header>
 
@@ -339,6 +348,18 @@
         }
 
         // Form Submission Logic
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Close menu on click
+        document.querySelectorAll('#mobileMenu a').forEach(el => {
+            el.addEventListener('click', () => {
+                document.getElementById('mobileMenu').classList.add('hidden');
+            });
+        });
+
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');

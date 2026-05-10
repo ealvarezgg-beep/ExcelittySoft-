@@ -8,7 +8,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -42,21 +42,27 @@
     </script>
     
     <style>
-        body { background-color: #0f172a; color: #f8fafc; }
+        * { box-sizing: border-box; }
+        body { background-color: #070b14; color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
         
         .wizard-card {
-            background-color: #1e293b; border: 1px solid #334155; border-radius: 1rem;
-            padding: 1.5rem; margin-bottom: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: all 0.3s ease;
+            background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.85)); 
+            border: 1px solid rgba(51,65,85,0.4); border-radius: 1.25rem;
+            padding: 1.75rem; margin-bottom: 1.5rem;
+            box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.03);
+            transition: all 0.4s cubic-bezier(.4,0,.2,1);
+            backdrop-filter: blur(16px);
         }
+        .wizard-card:hover { border-color: rgba(59, 130, 246, 0.15); }
 
         .selectable-card {
-            border: 2px solid #334155; background-color: rgba(30, 41, 59, 0.5); border-radius: 0.75rem;
-            cursor: pointer; transition: all 0.2s ease; position: relative; overflow: hidden; padding: 1rem;
+            border: 2px solid rgba(51,65,85,0.4); background: rgba(15,23,42,0.6); border-radius: 1rem;
+            cursor: pointer; transition: all 0.3s cubic-bezier(.4,0,.2,1); position: relative; overflow: hidden; padding: 1rem;
+            backdrop-filter: blur(8px);
         }
-        .selectable-card:hover { border-color: #475569; transform: translateY(-2px); }
-        .selectable-card.selected { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+        .selectable-card:hover { border-color: rgba(99,102,241,0.3); transform: translateY(-3px); box-shadow: 0 8px 24px -4px rgba(0,0,0,0.3); }
+        .selectable-card.selected { border-color: #6366f1; background: rgba(99,102,241,0.08); box-shadow: 0 0 20px rgba(99,102,241,0.2), inset 0 1px 0 rgba(99,102,241,0.1); }
         
         .check-icon {
             position: absolute; top: 0.75rem; right: 0.75rem; color: #3b82f6;
@@ -65,12 +71,12 @@
         .selectable-card.selected .check-icon { opacity: 1; transform: scale(1); }
 
         .time-pill {
-            padding: 0.75rem 1rem; border-radius: 9999px; border: 1px solid #334155;
-            background-color: transparent; color: #cbd5e1; text-align: center;
-            cursor: pointer; transition: all 0.2s ease; font-weight: 500;
+            padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid rgba(51,65,85,0.4);
+            background: rgba(15,23,42,0.5); color: #cbd5e1; text-align: center;
+            cursor: pointer; transition: all 0.25s cubic-bezier(.4,0,.2,1); font-weight: 600; font-size: 0.875rem;
         }
-        .time-pill:hover { border-color: #3b82f6; color: #fff; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
-        .time-pill.selected { background-color: #3b82f6; border-color: #3b82f6; color: #fff; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .time-pill:hover { border-color: #6366f1; color: #fff; box-shadow: 0 0 12px rgba(99,102,241,0.25); background: rgba(99,102,241,0.06); }
+        .time-pill.selected { background: linear-gradient(135deg, #6366f1, #8b5cf6); border-color: transparent; color: #fff; box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
 
         .dropzone {
             border: 2px dashed #475569; border-radius: 0.75rem; background-color: rgba(30, 41, 59, 0.3);

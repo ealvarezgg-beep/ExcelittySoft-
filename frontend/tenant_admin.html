@@ -8,7 +8,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -40,26 +40,30 @@
     </script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; overflow: hidden; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #0a0f1a; color: #f1f5f9; overflow: hidden; }
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
         
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
 
         .sidebar-link {
             display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
-            border-radius: 0.5rem; color: #94a3b8; transition: all 0.2s ease; cursor: pointer;
+            border-radius: 0.75rem; color: #94a3b8; transition: all 0.25s cubic-bezier(.4,0,.2,1); cursor: pointer;
+            font-size: 0.875rem; font-weight: 500;
         }
-        .sidebar-link:hover { background-color: rgba(14, 165, 233, 0.1); color: #38bdf8; }
-        .sidebar-link.active { background-color: #0ea5e9; color: #fff; box-shadow: 0 4px 14px 0 rgba(14, 165, 233, 0.39); }
+        .sidebar-link:hover { background-color: rgba(14, 165, 233, 0.08); color: #e2e8f0; transform: translateX(4px); }
+        .sidebar-link.active { background: linear-gradient(135deg, #0ea5e9, #06b6d4); color: #fff; box-shadow: 0 8px 24px -4px rgba(14, 165, 233, 0.4); font-weight: 600; }
 
-        .view-section { display: none; animation: fadeIn 0.4s ease; }
+        .view-section { display: none; animation: fadeSlideIn 0.5s cubic-bezier(.4,0,.2,1); }
         .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .card { background: linear-gradient(145deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border: 1px solid rgba(51,65,85,0.5); border-radius: 1.25rem; padding: 1.5rem; box-shadow: 0 8px 32px -4px rgba(0,0,0,0.3); backdrop-filter: blur(12px); transition: all 0.3s ease; }
+        .card:hover { border-color: rgba(14,165,233,0.2); box-shadow: 0 12px 40px -8px rgba(0,0,0,0.4); }
         
         .form-input, .form-select {
             width: 100%; background-color: #0f172a; border: 1px solid #334155; border-radius: 0.5rem;
@@ -187,43 +191,74 @@
         
         <!-- View: Dashboard -->
         <div id="view-dashboard" class="view-section active">
-            <h2 class="text-2xl font-bold text-white mb-6">Visión General</h2>
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-1">Visión General</h2>
+                    <p class="text-slate-500 text-sm">Rendimiento consolidado de tu barbería</p>
+                </div>
+                <div class="hidden md:flex items-center gap-2 text-xs text-slate-500 bg-slate-800/50 border border-slate-700/50 px-3 py-1.5 rounded-full">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    Datos en tiempo real
+                </div>
+            </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="card border-l-4 border-l-brand-500 flex flex-col justify-between">
-                    <p class="text-slate-400 text-sm font-medium">Ingresos del Mes</p>
-                    <h3 class="text-3xl font-bold text-white mt-2" id="metricIncome">0 Gs</h3>
-                    <p class="text-emerald-400 text-xs mt-2"><i class="fa-solid fa-arrow-trend-up"></i> Calculado de turnos</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+                <div class="card group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center"><i class="fa-solid fa-arrow-trend-up text-cyan-400"></i></div>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-bold text-white" id="metricIncome">0 Gs</h3>
+                    <p class="text-slate-500 text-xs mt-1">Ingresos del Mes</p>
                 </div>
-                <div class="card border-l-4 border-l-rose-500 flex flex-col justify-between">
-                    <p class="text-slate-400 text-sm font-medium">Gastos Registrados</p>
-                    <h3 class="text-3xl font-bold text-white mt-2" id="metricExpenses">0 Gs</h3>
-                    <p class="text-rose-400 text-xs mt-2"><i class="fa-solid fa-chart-line"></i> Total de egresos</p>
+                <div class="card group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-pink-500"></div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center"><i class="fa-solid fa-receipt text-rose-400"></i></div>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-bold text-white" id="metricExpenses">0 Gs</h3>
+                    <p class="text-slate-500 text-xs mt-1">Gastos Registrados</p>
                 </div>
-                <div class="card border-l-4 border-l-amber-500 flex flex-col justify-between">
-                    <p class="text-slate-400 text-sm font-medium">Turnos de Hoy</p>
-                    <h3 class="text-3xl font-bold text-white mt-2" id="metricAppointments">0</h3>
-                    <p class="text-amber-400 text-xs mt-2"><i class="fa-solid fa-calendar-check"></i> Turnos agendados hoy</p>
+                <div class="card group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center"><i class="fa-solid fa-calendar-day text-amber-400"></i></div>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-bold text-white" id="metricAppointments">0</h3>
+                    <p class="text-slate-500 text-xs mt-1">Turnos de Hoy</p>
                 </div>
-                <div class="card border-l-4 border-l-emerald-500 flex flex-col justify-between">
-                    <p class="text-slate-400 text-sm font-medium">Nuevos Clientes</p>
-                    <h3 class="text-3xl font-bold text-white mt-2" id="metricClients">0</h3>
-                    <p class="text-emerald-400 text-xs mt-2"><i class="fa-solid fa-users"></i> Clientes únicos históricos</p>
+                <div class="card group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"><i class="fa-solid fa-users text-emerald-400"></i></div>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-bold text-white" id="metricClients">0</h3>
+                    <p class="text-slate-500 text-xs mt-1">Clientes Únicos</p>
                 </div>
             </div>
 
-            <!-- Heatmap Placeholder -->
+            <!-- Staff Performance -->
             <div class="card">
-                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-fire text-amber-500"></i> Días y Horarios Más Rentables
-                </h3>
-                <div class="h-64 bg-slate-900 rounded-lg border border-slate-700 flex items-center justify-center relative overflow-hidden">
-                    <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 50% 50%, #0ea5e9 0%, transparent 50%); background-size: 100px 100px;"></div>
-                    <div class="text-center z-10">
-                        <i class="fa-solid fa-chart-bar text-4xl text-slate-600 mb-3"></i>
-                        <p class="text-slate-400 font-medium">Visualización Heatmap en Construcción</p>
-                        <p class="text-sm text-slate-500">Conectando métricas de FastAPI...</p>
-                    </div>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-ranking-star text-amber-400"></i> Rendimiento del Staff
+                    </h3>
+                    <span class="text-xs text-slate-500 bg-slate-800/60 px-3 py-1 rounded-full">Comisiones globales</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Barbero</th>
+                                <th>Horarios</th>
+                                <th>Cortes Totales</th>
+                                <th>Comisión Acumulada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardStaffPerformance">
+                            <tr><td colspan="4" class="text-center text-slate-500 py-6"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -314,7 +349,7 @@
                 </div>
 
                 <div class="card lg:col-span-2">
-                    <h3 class="text-lg font-semibold text-white mb-4 border-b border-dark-border pb-2">Rendimiento Hoy</h3>
+                    <h3 class="text-lg font-semibold text-white mb-4 border-b border-dark-border pb-2">Rendimiento Global</h3>
                     <div class="overflow-x-auto">
                         <table>
                             <thead>
@@ -750,20 +785,20 @@
                 const staffPerformance = {};
 
                 apps.forEach(app => {
+                    const price = servicePrices[app.service_id] || 0;
                     if (app.status === 'booked' || app.status === 'completed') {
-                        totalIncome += servicePrices[app.service_id] || 0;
+                        totalIncome += price;
                         uniqueClients.add(app.client_whatsapp);
+                        // Count commissions for ALL completed/booked appointments (not just today)
+                        if (app.staff_id) {
+                            if (!staffPerformance[app.staff_id]) staffPerformance[app.staff_id] = { count: 0, revenue: 0 };
+                            staffPerformance[app.staff_id].count++;
+                            staffPerformance[app.staff_id].revenue += price;
+                        }
                     }
-                    if (app.start_time.startsWith(todayStr)) {
+                    if (app.start_time && app.start_time.startsWith(todayStr)) {
                         if (app.status === 'booked' || app.status === 'pending_approval' || app.status === 'pending') {
                             todayAppointments++;
-                        }
-                        if (app.status === 'booked' || app.status === 'completed') {
-                            if (app.staff_id) {
-                                if (!staffPerformance[app.staff_id]) staffPerformance[app.staff_id] = { count: 0, revenue: 0 };
-                                staffPerformance[app.staff_id].count++;
-                                staffPerformance[app.staff_id].revenue += (servicePrices[app.service_id] || 0);
-                            }
                         }
                     }
                 });

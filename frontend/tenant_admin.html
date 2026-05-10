@@ -136,6 +136,10 @@
                     <i class="fa-solid fa-scissors w-5"></i>
                     <span>Mis Servicios</span>
                 </div>
+                <div class="sidebar-link" data-target="subscription">
+                    <i class="fa-solid fa-star w-5"></i>
+                    <span>Suscripción</span>
+                </div>
                 <div class="sidebar-link" data-target="settings">
                     <i class="fa-solid fa-gear w-5"></i>
                     <span>Configuración</span>
@@ -439,6 +443,63 @@
                 </div>
             </div>
         </div>
+        <!-- View: Subscription -->
+        <div id="view-subscription" class="view-section hidden">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-1">Administrar Suscripción</h2>
+                    <p class="text-slate-400 text-sm">Gestiona tu plan y pagos de ExcelittySoft</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Status Card -->
+                <div class="glass-panel p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 border-b border-dark-border pb-2">Estado de Cuenta</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-400">Plan Actual</span>
+                            <span class="text-white font-medium">SaaS Premium</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-400">Costo Mensual</span>
+                            <span class="text-brand-400 font-bold">150.000 Gs</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-4 border-t border-dark-border">
+                            <span class="text-slate-400">Estado</span>
+                            <span id="subStatusBadge" class="bg-slate-800 text-slate-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Card -->
+                <div class="glass-panel p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 border-b border-dark-border pb-2">Renovar / Pagar</h3>
+                    
+                    <div class="bg-slate-900 rounded-xl p-4 border border-slate-700 mb-6 text-sm">
+                        <p class="text-slate-300 font-mono">
+                            Titular: Eric Fernando Alvarez Gomez<br>
+                            CI: 5948371<br>
+                            Entidad: ueno bank<br>
+                            N° de cuenta: 6191780004<br>
+                            Moneda: GS<br>
+                            Alias: CI 5948371
+                        </p>
+                    </div>
+
+                    <form onsubmit="submitManualSubscriptionPayment(event)">
+                        <label class="block text-sm text-slate-400 mb-2">Subir Comprobante de Transferencia</label>
+                        <div class="dropzone mb-4" style="padding: 1rem;">
+                            <input type="file" accept="image/*" required id="manualSubProofFile" class="dropzone-input" onchange="document.getElementById('manualSubFileName').innerText = this.files[0] ? this.files[0].name : 'Seleccionar imagen'">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-500 mb-1"></i>
+                            <p class="text-xs text-slate-400" id="manualSubFileName">Clic o arrastrar comprobante</p>
+                        </div>
+                        <button type="submit" id="btnManualSubSubmit" class="btn-primary w-full">Enviar Comprobante</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- View: Configuración -->
         <div id="view-settings" class="view-section">
             <h2 class="text-2xl font-bold text-white mb-6">Configuración de Barbería</h2>
@@ -499,7 +560,14 @@
                 Tu periodo de prueba ha finalizado. Para seguir utilizando la plataforma y recibiendo reservas, realiza el pago de la suscripción mensual (150.000 Gs) y sube tu comprobante.
             </p>
             <div class="bg-slate-900 rounded-xl p-4 text-left border border-slate-700 mb-6">
-                <p class="text-sm text-slate-300 font-mono">Banco Itaú<br>Cuenta: 987654321<br>CI: 1234567<br>A nombre de ExcelittySoft</p>
+                <p class="text-sm text-slate-300 font-mono">
+                    Titular: Eric Fernando Alvarez Gomez<br>
+                    CI: 5948371<br>
+                    Entidad: ueno bank<br>
+                    N° de cuenta: 6191780004<br>
+                    Moneda: GS<br>
+                    Alias: CI 5948371
+                </p>
             </div>
             
             <form id="lockoutPaymentForm" onsubmit="submitSubscriptionPayment(event)">
@@ -539,16 +607,17 @@
                 const data = await res.json().catch(() => ({}));
                 document.getElementById('lockoutModal').style.display = 'flex';
                 if(data.detail) {
-                    let msg = data.detail;
                     if(msg.includes('falta de pago') || msg.includes('prueba')) {
                         msg += ". Realiza el pago mensual (150.000 Gs) y sube tu comprobante abajo para continuar.";
                         document.getElementById('lockoutMessage').innerHTML = msg;
                     } else {
                         // Fully disabled by super admin
-                        document.getElementById('lockoutMessage').innerHTML = `<span class="text-rose-500 font-bold">${msg}</span>`;
-                        // Hide upload form
+                        document.getElementById('lockoutMessage').innerHTML = `<span class="text-rose-500 font-bold">${msg}</span><br><br><a href="https://wa.me/595992901387" target="_blank" class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mt-4"><i class="fa-brands fa-whatsapp"></i> Contactar Soporte</a>`;
+                        // Hide upload form and bank details
                         const form = document.querySelector('#lockoutModal form');
                         if(form) form.style.display = 'none';
+                        const bankInfo = document.querySelector('#lockoutModal .bg-slate-900');
+                        if(bankInfo) bankInfo.style.display = 'none';
                     }
                 }
                 throw new Error("Payment Required");
@@ -616,6 +685,7 @@
                 if(targetId === 'view-staff') loadStaff();
                 if(targetId === 'view-services') loadServices();
                 if(targetId === 'view-finance') loadExpenses();
+                if(targetId === 'view-subscription') loadSubscription();
                 if(targetId === 'view-settings') loadSettings();
             });
         });
@@ -657,16 +727,19 @@
             try {
                 // Fetch appointments
                 const resApp = await fetch(`${API_URL}/${tenantId}/appointments`, { headers: getHeaders() });
+                await handleApiError(resApp);
                 const apps = await resApp.json();
                 
                 // Fetch services to get prices
                 const resServ = await fetch(`${API_URL}/${tenantId}/services`, { headers: getHeaders() });
+                await handleApiError(resServ);
                 const services = await resServ.json();
                 const servicePrices = {};
-                services.forEach(s => servicePrices[s.id] = s.price);
+                services.forEach(s => servicePrices[s.id] = Number(s.price));
                 
                 // Fetch expenses
                 const resExp = await fetch(`${API_URL}/${tenantId}/expenses`, { headers: getHeaders() });
+                await handleApiError(resExp);
                 const exps = await resExp.json();
 
                 let totalIncome = 0;
@@ -682,14 +755,14 @@
                         uniqueClients.add(app.client_whatsapp);
                     }
                     if (app.start_time.startsWith(todayStr)) {
-                        if (app.status === 'booked' || app.status === 'pending') {
+                        if (app.status === 'booked' || app.status === 'pending_approval' || app.status === 'pending') {
                             todayAppointments++;
                         }
                         if (app.status === 'booked' || app.status === 'completed') {
                             if (app.staff_id) {
                                 if (!staffPerformance[app.staff_id]) staffPerformance[app.staff_id] = { count: 0, revenue: 0 };
                                 staffPerformance[app.staff_id].count++;
-                                staffPerformance[app.staff_id].revenue += servicePrices[app.service_id] || 0;
+                                staffPerformance[app.staff_id].revenue += (servicePrices[app.service_id] || 0);
                             }
                         }
                     }
@@ -714,7 +787,7 @@
                 } else {
                     staffList.forEach(s => {
                         const perf = staffPerformance[s.id] || { count: 0, revenue: 0 };
-                        const commission = perf.revenue * (s.commission_percentage / 100);
+                        const commission = (perf.revenue * (Number(s.commission_percentage) / 100)) || 0;
                         const initials = s.name.substring(0,2).toUpperCase();
                         perfTbody.innerHTML += `
                             <tr>
@@ -860,11 +933,27 @@
                             </div>
                             <div class="text-right flex items-center gap-3">
                                 <h3 class="text-2xl font-bold text-white">${time}</h3>
-                                <button class="bg-slate-800 text-rose-400 hover:text-rose-500 p-2 rounded transition-colors" onclick="cancelAppointment(this, ${app.id})">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                                <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                                    <i class="fa-solid fa-check"></i>
+                                <div class="flex gap-2">
+                                    <button class="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white border border-emerald-500/50 px-3 py-1.5 rounded text-sm font-medium transition-colors" onclick="completeAppointment(this, ${app.id}, '${app.client_name}')">
+                                        Completar
+                                    </button>
+                                    <button class="bg-slate-800 text-rose-400 hover:text-rose-500 border border-slate-700 px-3 py-1.5 rounded transition-colors" onclick="cancelAppointment(this, ${app.id})">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>`;
+                    } else if(app.status === 'completed') {
+                        confirmedList.innerHTML += `
+                        <div class="bg-slate-900 border border-slate-700 rounded-lg p-4 flex justify-between items-center opacity-70">
+                            <div>
+                                <h4 class="font-bold text-slate-300 text-lg">${app.client_name}</h4>
+                                <p class="text-sm text-slate-500">Servicio ID: ${app.service_id} | <span class="text-slate-500">Staff ID: ${app.staff_id || 'N/A'}</span></p>
+                            </div>
+                            <div class="text-right flex items-center gap-3">
+                                <h3 class="text-xl font-bold text-slate-400">${time}</h3>
+                                <div class="w-8 h-8 rounded-full bg-slate-800 text-emerald-500 flex items-center justify-center">
+                                    <i class="fa-solid fa-check-double"></i>
                                 </div>
                             </div>
                         </div>`;
@@ -896,6 +985,27 @@
             } catch (e) {
                 showToast("No se pudo aprobar el turno.", "error");
                 btnElement.innerHTML = 'Aprobar';
+                btnElement.disabled = false;
+            }
+        }
+
+        async function completeAppointment(btnElement, id, clientName) {
+            btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btnElement.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/${tenantId}/appointments/${id}/status`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify({status: 'completed'})
+                });
+                await handleApiError(res);
+
+                showToast(`Turno de ${clientName} marcado como completado.`);
+                loadAppointments(); 
+            } catch (e) {
+                showToast("No se pudo completar el turno.", "error");
+                btnElement.innerHTML = 'Completar';
                 btnElement.disabled = false;
             }
         }
@@ -1110,6 +1220,66 @@
                 btn.disabled = false;
             }
         });
+
+        async function loadSubscription() {
+            try {
+                // Fetch public endpoint to get tenant payment status without crashing if suspended
+                const slug = localStorage.getItem('tenant_slug');
+                if(!slug) return;
+                const res = await fetch(`/api/public/${slug}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const badge = document.getElementById('subStatusBadge');
+                    const status = data.payment_status;
+                    let txt = "Desconocido", color = "bg-slate-800 text-slate-300";
+                    if (status === 'paid') { txt = 'ACTIVO'; color = "bg-emerald-500/20 text-emerald-400"; }
+                    if (status === 'pending_approval') { txt = 'PENDIENTE'; color = "bg-amber-500/20 text-amber-400"; }
+                    if (status === 'trial') { txt = 'PRUEBA'; color = "bg-brand-500/20 text-brand-400"; }
+                    if (status === 'suspended') { txt = 'SUSPENDIDO'; color = "bg-rose-500/20 text-rose-400"; }
+                    badge.className = `px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${color}`;
+                    badge.innerText = txt;
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function submitManualSubscriptionPayment(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnManualSubSubmit');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Subiendo...';
+            btn.disabled = true;
+
+            try {
+                const fileInput = document.getElementById('manualSubProofFile');
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!uploadRes.ok) throw new Error("Error subiendo archivo");
+                const data = await uploadRes.json();
+
+                // Update tenant settings with the proof
+                const res = await fetch(`${API_URL}/${tenantId}/settings`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ subscription_proof_url: data.url })
+                });
+
+                await handleApiError(res);
+                
+                showToast("¡Comprobante enviado para verificación!", "success");
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Enviado';
+                loadSubscription();
+            } catch(err) {
+                showToast("Ocurrió un error. Intenta nuevamente.", "error");
+                btn.innerHTML = 'Enviar Comprobante';
+                btn.disabled = false;
+            }
+        }
 
         // Initialize dashboard data if needed
         loadAppointments();

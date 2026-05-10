@@ -231,8 +231,12 @@
                 </svg>
                 
                 <h2 class="text-2xl font-bold text-white mb-2">¡Solicitud Enviada!</h2>
-                <p class="text-slate-400 text-sm mb-6 leading-relaxed">Tu cita se encuentra <strong>Pendiente de Aprobación</strong>. Se confirmará oficialmente apenas el barbero valide tu transferencia.</p>
+                <p class="text-slate-400 text-sm mb-6 leading-relaxed">Tu cita se encuentra <strong>Pendiente de Aprobación</strong>. Se confirmará oficialmente apenas el barbero valide tu reserva.</p>
                 
+                <div id="waRedirectBtnContainer" class="hidden mb-4">
+                     <a href="#" id="waRedirectBtn" target="_blank" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition-colors inline-block"><i class="fa-brands fa-whatsapp"></i> Confirmar por WhatsApp</a>
+                </div>
+
                 <button onclick="closeModal()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 rounded-xl transition-colors">
                     Entendido
                 </button>
@@ -495,11 +499,16 @@
 
                 btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Asegurando turno...</span>';
 
-                // Setup dates
+                // Setup dates correctly with local time to avoid timezone shifts
                 const dateStr = document.getElementById('bookingDate').value;
                 const startTimeStr = `${dateStr}T${selectedTime}:00`;
-                const startTime = new Date(startTimeStr);
-                const endTime = new Date(startTime.getTime() + 30*60000); // 30 min aprox
+                
+                const [hr, min] = selectedTime.split(':').map(Number);
+                let endMin = min + 30;
+                let endHr = hr;
+                if(endMin >= 60) { endMin -= 60; endHr++; }
+                const endTimeStr = `${dateStr}T${endHr.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}:00`;
+                
                 const clientName = document.getElementById('clientName').value;
 
                 // 2. Submit booking
@@ -508,8 +517,8 @@
                     staff_id: selectedStaffId, // can be null
                     client_name: clientName,
                     client_whatsapp: document.getElementById('clientPhone').value,
-                    start_time: startTime.toISOString(), 
-                    end_time: endTime.toISOString(),
+                    start_time: startTimeStr, 
+                    end_time: endTimeStr,
                     payment_proof_url: proofUrl
                 };
 
@@ -524,10 +533,14 @@
                 if (!isTransfer && tenantWhatsappNumber) {
                     // Redirect to WhatsApp
                     const serviceName = document.querySelector('#servicesList .selected h4').innerText;
-                    const text = `Hola! Quiero agendar un turno para *${serviceName}* el día *${dateStr}* a las *${selectedTime}*. Mi nombre es *${clientName}*. Pagaré en el local.`;
+                    const text = `Hola! Acabo de agendar un turno para *${serviceName}* el día *${dateStr}* a las *${selectedTime}*. Mi nombre es *${clientName}*. Pagaré en el local.`;
                     const waUrl = `https://wa.me/${tenantWhatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
+                    
+                    document.getElementById('waRedirectBtn').href = waUrl;
+                    document.getElementById('waRedirectBtnContainer').classList.remove('hidden');
+                    
+                    // Attempt automatic redirect
                     window.location.href = waUrl;
-                    return;
                 }
 
                 // Show Modal

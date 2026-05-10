@@ -159,12 +159,7 @@
                 </div>
                 
                 <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" id="timeSlots">
-                    <div class="time-pill">09:00</div>
-                    <div class="time-pill">09:30</div>
-                    <div class="time-pill">10:00</div>
-                    <div class="time-pill">14:00</div>
-                    <div class="time-pill">14:30</div>
-                    <div class="time-pill">15:00</div>
+                    <div class="col-span-full text-slate-500 text-sm">Selecciona un profesional (Paso 2) para ver sus horarios disponibles.</div>
                 </div>
             </div>
 
@@ -288,7 +283,8 @@
                 const resTenant = await fetch(`/api/public/${tenantSlug}`);
                 if (!resTenant.ok) {
                     if (resTenant.status === 402) {
-                        document.body.innerHTML = '<div class="h-screen w-screen flex items-center justify-center text-center p-4"><div class="bg-dark-card border border-rose-500/30 rounded-2xl p-8 max-w-md w-full"><i class="fa-solid fa-lock text-rose-500 text-5xl mb-4"></i><h2 class="text-2xl font-bold text-white mb-2">Servicio Suspendido</h2><p class="text-slate-400 text-sm">El periodo de prueba o la suscripción de esta barbería ha expirado.</p></div></div>';
+                        const err = await resTenant.json();
+                        document.body.innerHTML = `<div class="h-screen w-screen flex items-center justify-center text-center p-4"><div class="bg-dark-card border border-rose-500/30 rounded-2xl p-8 max-w-md w-full"><i class="fa-solid fa-lock text-rose-500 text-5xl mb-4"></i><h2 class="text-2xl font-bold text-white mb-2">Servicio Suspendido</h2><p class="text-slate-400 text-sm">${err.detail}</p></div></div>`;
                         throw new Error("Tenant suspendido");
                     }
                     throw new Error("Barbería no encontrada.");
@@ -357,11 +353,11 @@
 
                 // Fetch Staff
                 const resStaff = await fetch(`/api/public/${tenantSlug}/staff`);
-                const staffList = await resStaff.json();
+                window.staffListData = await resStaff.json();
 
                 const staffContainer = document.getElementById('staffList');
                 staffContainer.innerHTML = '';
-                staffList.forEach((st) => {
+                window.staffListData.forEach((st) => {
                     staffContainer.innerHTML += `
                         <div class="selectable-card text-center" onclick="selectStaff(this, ${st.id})">
                             <i class="fa-solid fa-circle-check check-icon"></i>
@@ -372,7 +368,7 @@
                         </div>
                     `;
                 });
-                if(staffList.length === 0) staffContainer.innerHTML = '<p class="text-slate-500 col-span-2">No hay personal disponible.</p>';
+                if(window.staffListData.length === 0) staffContainer.innerHTML = '<p class="text-slate-500 col-span-2">No hay personal disponible.</p>';
 
                 await fetchAvailableTimes();
 
@@ -429,15 +425,37 @@
             document.querySelectorAll('#staffList .selectable-card').forEach(el => el.classList.remove('selected'));
             element.classList.add('selected');
             selectedStaffId = id;
+            
+            // Render specific times for this staff member
+            const staff = window.staffListData.find(s => s.id === id);
+            const timeSlotsContainer = document.getElementById('timeSlots');
+            timeSlotsContainer.innerHTML = '';
+            selectedTime = null;
+            
+            if (staff && staff.working_hours) {
+                // assume comma separated
+                const hours = staff.working_hours.split(',').map(s => s.trim()).filter(s => s);
+                if(hours.length === 0) {
+                    timeSlotsContainer.innerHTML = '<div class="col-span-full text-slate-500 text-sm">Este profesional no tiene horarios configurados.</div>';
+                } else {
+                    hours.forEach(hour => {
+                        const div = document.createElement('div');
+                        div.className = 'time-pill';
+                        div.innerText = hour;
+                        div.addEventListener('click', function() {
+                            document.querySelectorAll('.time-pill').forEach(el => el.classList.remove('selected'));
+                            this.classList.add('selected');
+                            selectedTime = this.innerText;
+                        });
+                        timeSlotsContainer.appendChild(div);
+                    });
+                }
+            } else {
+                timeSlotsContainer.innerHTML = '<div class="col-span-full text-slate-500 text-sm">Este profesional no tiene horarios configurados.</div>';
+            }
+            
+            fetchAvailableTimes();
         }
-
-        document.querySelectorAll('.time-pill').forEach(slot => {
-            slot.addEventListener('click', function() {
-                document.querySelectorAll('.time-pill').forEach(el => el.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedTime = this.innerText;
-            });
-        });
 
         // Form Submission
         document.getElementById('bookingForm').addEventListener('submit', async (e) => {

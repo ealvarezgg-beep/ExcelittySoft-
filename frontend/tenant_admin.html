@@ -140,9 +140,14 @@
         </div>
 
         <div class="p-4 border-t border-dark-border space-y-3">
-            <a id="publicBookingLink" href="public_booking.html" target="_blank" class="flex items-center justify-center gap-2 w-full bg-brand-500/10 text-brand-400 border border-brand-500/30 hover:bg-brand-500 hover:text-white py-2 rounded-lg transition-all font-medium">
-                <i class="fa-solid fa-link"></i> Mi Enlace Público
-            </a>
+            <div class="flex gap-2">
+                <a id="publicBookingLink" href="#" target="_blank" class="flex-1 flex items-center justify-center gap-2 bg-brand-500/10 text-brand-400 border border-brand-500/30 hover:bg-brand-500 hover:text-white py-2 rounded-lg transition-all font-medium text-sm">
+                    <i class="fa-solid fa-link"></i> Mi Enlace
+                </a>
+                <button onclick="copyPublicLink()" class="px-3 bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 hover:text-white rounded-lg transition-all" title="Copiar enlace">
+                    <i class="fa-solid fa-copy"></i>
+                </button>
+            </div>
             <div class="flex items-center justify-between px-2 pt-2">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300">
@@ -282,15 +287,10 @@
                             <label class="block text-xs text-slate-400 mb-1">Comisión por Servicio (%)</label>
                             <input type="number" class="form-input" required placeholder="30">
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs text-slate-400 mb-1">Hora Inicio</label>
-                                <input type="time" class="form-input" required value="09:00">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-slate-400 mb-1">Hora Fin</label>
-                                <input type="time" class="form-input" required value="18:00">
-                            </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Horarios Disponibles</label>
+                            <input type="text" class="form-input" required placeholder="Ej: 09:00, 10:00, 11:30, 14:00">
+                            <p class="text-[10px] text-slate-500 mt-1">Escribe los horarios separados por comas. Dale al barbero la libertad que quiera.</p>
                         </div>
                         <button type="submit" class="btn-primary w-full mt-2"><i class="fa-solid fa-plus"></i> Registrar Barbero</button>
                     </form>
@@ -526,7 +526,17 @@
                 const data = await res.json().catch(() => ({}));
                 document.getElementById('lockoutModal').style.display = 'flex';
                 if(data.detail) {
-                    document.getElementById('lockoutMessage').innerText = data.detail + ". Realiza el pago mensual (150.000 Gs) y sube tu comprobante para continuar.";
+                    let msg = data.detail;
+                    if(msg.includes('falta de pago') || msg.includes('prueba')) {
+                        msg += ". Realiza el pago mensual (150.000 Gs) y sube tu comprobante abajo para continuar.";
+                        document.getElementById('lockoutMessage').innerHTML = msg;
+                    } else {
+                        // Fully disabled by super admin
+                        document.getElementById('lockoutMessage').innerHTML = `<span class="text-rose-500 font-bold">${msg}</span>`;
+                        // Hide upload form
+                        const form = document.querySelector('#lockoutModal form');
+                        if(form) form.style.display = 'none';
+                    }
                 }
                 throw new Error("Payment Required");
             }
@@ -599,9 +609,24 @@
         
         // Initial load
         window.addEventListener('DOMContentLoaded', () => {
+            const slug = localStorage.getItem('tenant_slug');
+            document.getElementById('sidebarTenantName').innerText = slug || 'Admin';
+            
+            if(slug) {
+                const publicUrl = window.location.origin + '/app/public_booking.html?slug=' + slug;
+                document.getElementById('publicBookingLink').href = publicUrl;
+            }
+
             loadDashboard();
-            document.getElementById('sidebarTenantName').innerText = localStorage.getItem('tenant_slug') || 'Admin';
         });
+
+        function copyPublicLink() {
+            const slug = localStorage.getItem('tenant_slug');
+            if(!slug) return;
+            const publicUrl = window.location.origin + '/app/public_booking.html?slug=' + slug;
+            navigator.clipboard.writeText(publicUrl);
+            showToast("¡Enlace copiado al portapapeles!", false);
+        }
 
         async function loadDashboard() {
             try {
@@ -903,7 +928,7 @@
                 name: e.target[0].value,
                 base_salary: parseFloat(e.target[1].value),
                 commission_percentage: parseFloat(e.target[2].value),
-                working_hours: `${e.target[3].value} - ${e.target[4].value}`,
+                working_hours: e.target[3].value, // Now takes the freeform string directly
                 is_active: true
             };
             try {

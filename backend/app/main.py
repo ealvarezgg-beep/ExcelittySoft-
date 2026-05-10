@@ -292,14 +292,16 @@ def require_tenant_admin(tenant_id: int, db: Session, current_user: models.User,
     if current_user.role != "super_admin" and current_user.tenant_id != tenant_id:
         raise HTTPException(status_code=403, detail="No tienes acceso a este tenant")
     
-    if current_user.role != "super_admin" and not allow_expired:
+    if current_user.role != "super_admin":
         tenant = db.query(models.Tenant).filter(models.Tenant.id == tenant_id).first()
         if tenant:
-            if tenant.payment_status == 'suspended':
-                raise HTTPException(status_code=402, detail="Account suspended")
-            if tenant.payment_status == 'trial' and (datetime.utcnow() - tenant.created_at).days >= 3:
-                raise HTTPException(status_code=402, detail="Trial expired")
-
+            if not tenant.is_active:
+                raise HTTPException(status_code=402, detail="La cuenta está suspendida. Comunícate al WhatsApp 0992901387")
+            if not allow_expired:
+                if tenant.payment_status == 'suspended':
+                    raise HTTPException(status_code=402, detail="La cuenta está suspendida por falta de pago. Comunícate al WhatsApp 0992901387")
+                if tenant.payment_status == 'trial' and (datetime.utcnow() - tenant.created_at).days >= 3:
+                    raise HTTPException(status_code=402, detail="El periodo de prueba ha expirado")
     return current_user
 
 @app.get("/api/tenant/{tenant_id}/services", response_model=List[schemas.Service], tags=["TenantAdmin"])
@@ -416,8 +418,10 @@ def update_tenant_settings(tenant_id: int, req: dict, db: Session = Depends(get_
 
 # --- RUTAS VISTA PÚBLICA ---
 def check_tenant_public_access(tenant):
-    if not tenant or not tenant.is_active:
-        raise HTTPException(status_code=404, detail="Barbería no encontrada o inactiva")
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Barbería no encontrada")
+    if not tenant.is_active:
+        raise HTTPException(status_code=402, detail="La cuenta de la barbería está suspendida. Comunícate al WhatsApp 0992901387 para reactivarla")
     if tenant.payment_status == 'trial' and (datetime.utcnow() - tenant.created_at).days >= 3:
         raise HTTPException(status_code=402, detail="El periodo de prueba de la barbería ha expirado")
     if tenant.payment_status == 'suspended':

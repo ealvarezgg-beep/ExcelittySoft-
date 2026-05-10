@@ -208,7 +208,7 @@
                             <i class="fa-solid fa-coins text-9xl"></i>
                         </div>
                         <p class="text-slate-400 font-mono text-xs mb-2">REVENUE_MRR</p>
-                        <h3 class="font-display text-4xl font-bold text-white mb-2">12.5M <span class="text-xl text-cyber-500">PYG</span></h3>
+                        <h3 class="font-display text-4xl font-bold text-white mb-2" id="kpiMrr">0 <span class="text-xl text-cyber-500">PYG</span></h3>
                         <p class="text-emerald-400 text-sm font-medium"><i class="fa-solid fa-arrow-up-right-dots"></i> +15% este mes</p>
                     </div>
                     <!-- KPI 2 -->
@@ -217,7 +217,7 @@
                             <i class="fa-solid fa-network-wired text-9xl"></i>
                         </div>
                         <p class="text-slate-400 font-mono text-xs mb-2">ACTIVE_NODES</p>
-                        <h3 class="font-display text-4xl font-bold text-white mb-2">84 <span class="text-xl text-slate-500">Tenants</span></h3>
+                        <h3 class="font-display text-4xl font-bold text-white mb-2" id="kpiNodes">0 <span class="text-xl text-slate-500">Tenants</span></h3>
                         <p class="text-emerald-400 text-sm font-medium"><i class="fa-solid fa-check-double"></i> 3 nuevos hoy</p>
                     </div>
                     <!-- KPI 3 -->
@@ -551,9 +551,9 @@
                 });
 
                 // Update KPIs
-                document.querySelector('h3').nextElementSibling.nextElementSibling.nextElementSibling.innerHTML = `${activeCount} <span class="text-xl text-slate-500">Tenants</span>`;
+                document.getElementById('kpiNodes').innerHTML = `${activeCount} <span class="text-xl text-slate-500">Tenants</span>`;
                 const mrr = activeCount * 150000;
-                document.querySelector('h3').innerHTML = `${(mrr/1000000).toFixed(1)}M <span class="text-xl text-cyber-500">PYG</span>`;
+                document.getElementById('kpiMrr').innerHTML = `${(mrr/1000000).toFixed(1)}M <span class="text-xl text-cyber-500">PYG</span>`;
 
                 initChart(activeCount);
                 addLog("[API] Matrix loaded. State synchronized.", "success");

@@ -642,6 +642,7 @@
                 const data = await res.json().catch(() => ({}));
                 document.getElementById('lockoutModal').style.display = 'flex';
                 if(data.detail) {
+                    let msg = data.detail;
                     if(msg.includes('falta de pago') || msg.includes('prueba')) {
                         msg += ". Realiza el pago mensual (150.000 Gs) y sube tu comprobante abajo para continuar.";
                         document.getElementById('lockoutMessage').innerHTML = msg;

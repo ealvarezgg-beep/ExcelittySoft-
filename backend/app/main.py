@@ -55,10 +55,7 @@ from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="ExcelittySoft Barber API", version="1.0.0")
 
-# Montar frontend para poder acceder desde un solo dominio
-frontend_path = os.path.join(os.path.dirname(__file__), "../../frontend")
-if os.path.exists(frontend_path):
-    app.mount("/app", StaticFiles(directory=frontend_path, html=True), name="frontend")
+# Frontend mount will be handled at end of file for proper route priority
 
 
 @app.on_event("startup")
@@ -182,23 +179,6 @@ def send_whatsapp_notification(phone: str, message: str):
     print(f"[WhatsApp Webhook Mock] A: {phone} | Mensaje: {message}")
 
 # --- RUTAS DE AUTENTICACIÓN / REGISTRO ---
-@app.post("/api/upload", tags=["Upload"])
-async def upload_proof(file: UploadFile = File(None)):
-    if not file:
-        return {"url": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300"} # Placeholder
-    
-    file_id = str(uuid.uuid4())
-    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-    filename = f"{file_id}.{ext}"
-    os.makedirs("uploads", exist_ok=True)
-    with open(f"uploads/{filename}", "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    return {"url": f"/uploads/{filename}"}
-
-# Montar uploads para ver las imágenes
-if not os.path.exists("uploads"):
-    os.makedirs("uploads")
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads_dir")
 
 @app.post("/api/auth/register", response_model=schemas.Tenant, tags=["Auth"])
 def register_barber(req: RegisterRequest, db: Session = Depends(get_db)):
@@ -525,4 +505,5 @@ if os.path.exists(UPLOAD_DIR):
 
 frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend"))
 if os.path.exists(frontend_path):
-    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+    app.mount("/app", StaticFiles(directory=frontend_path, html=True), name="frontend_app")
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend_root")

@@ -304,6 +304,12 @@ def require_tenant_admin(tenant_id: int, db: Session, current_user: models.User,
                     raise HTTPException(status_code=402, detail="El periodo de prueba ha expirado")
     return current_user
 
+@app.get("/api/tenant/{tenant_id}", response_model=schemas.Tenant, tags=["TenantAdmin"])
+def get_tenant_details(tenant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    require_tenant_admin(tenant_id, db, current_user, allow_expired=True)
+    tenant = db.query(models.Tenant).filter(models.Tenant.id == tenant_id).first()
+    return tenant
+
 @app.get("/api/tenant/{tenant_id}/services", response_model=List[schemas.Service], tags=["TenantAdmin"])
 def read_services(tenant_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     require_tenant_admin(tenant_id, db, current_user)

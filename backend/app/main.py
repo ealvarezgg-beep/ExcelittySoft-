@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -505,5 +506,17 @@ if os.path.exists(UPLOAD_DIR):
 
 frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend"))
 if os.path.exists(frontend_path):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_path, "assets")), name="frontend_assets")
     app.mount("/app", StaticFiles(directory=frontend_path, html=True), name="frontend_app")
-    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend_root")
+
+# SPA Catch-all Route (must be the very last route)
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_spa(full_path: str):
+    if full_path.startswith("api/") or full_path.startswith("uploads/") or full_path.startswith("assets/"):
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    index_path = os.path.join(frontend_path, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"message": "Frontend no compilado o no encontrado en " + frontend_path}
+

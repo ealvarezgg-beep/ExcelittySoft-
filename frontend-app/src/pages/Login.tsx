@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { auth } from '../lib/api'
 import ParticleField from '../components/three/ParticleField'
@@ -39,12 +39,11 @@ export default function Login() {
           barberPassword: password,
           barberWhatsapp: whatsapp
         })
-        // Auto switch to login
         setIsLogin(true)
-        setError('Registration successful. Please log in.')
+        setError('Registro exitoso. El sistema está evaluando tu nodo. Por favor, inicia sesión.')
       }
     } catch (err: any) {
-      setError(err.detail || err.message || 'An error occurred')
+      setError(err.detail || err.message || 'Se produjo un error de conexión con la red principal.')
     } finally {
       setLoading(false)
     }
@@ -52,74 +51,102 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen bg-void text-titanium flex items-center justify-center overflow-hidden noise-bg">
+      {/* Fondo 3D */}
       <div className="absolute inset-0 z-0">
         <ParticleField />
       </div>
 
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 w-full max-w-md p-8 card-bento backdrop-blur-xl bg-carbon/80"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-lg p-8 md:p-12 card-bento backdrop-blur-xl bg-carbon/80 border border-border/50 shadow-2xl"
       >
-        <div className="text-center mb-8">
-          <div className="font-display font-bold tracking-widest text-xl mb-2">
+        <div className="text-center mb-10">
+          <motion.div 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="font-display font-black tracking-widest text-3xl mb-3"
+          >
             EXCELITTY<span className="text-accent">SOFT</span>
+          </motion.div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-border bg-steel text-xs font-mono text-fog">
+            <div className="dot-pulse" />
+            {isLogin ? 'PORTAL_DE_ACCESO_SEGURO' : 'INICIALIZACIÓN_DE_NODO'}
           </div>
-          <p className="font-mono text-xs text-fog">
-            {isLogin ? 'SECURE_AUTH_PORTAL' : 'INITIALIZE_NEW_NODE'}
-          </p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-3 bg-danger-muted border border-danger/30 text-danger text-sm font-mono rounded">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
-            <>
-              <div>
-                <label className="block font-mono text-xs text-fog mb-1">NODE_NAME (BARBERIA)</label>
-                <input 
-                  type="text" 
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full bg-steel border border-border rounded px-4 py-3 text-white focus:outline-none focus:border-accent transition-colors"
-                  required 
-                />
-              </div>
-              <div>
-                <label className="block font-mono text-xs text-fog mb-1">CONTACT_WHATSAPP</label>
-                <input 
-                  type="tel" 
-                  value={whatsapp}
-                  onChange={e => setWhatsapp(e.target.value)}
-                  className="w-full bg-steel border border-border rounded px-4 py-3 text-white focus:outline-none focus:border-accent transition-colors"
-                  required 
-                />
-              </div>
-            </>
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-8 p-4 bg-danger-muted border border-danger/30 text-danger text-sm font-mono rounded"
+            >
+              <i className="fa-solid fa-triangle-exclamation mr-2"></i>
+              {error}
+            </motion.div>
           )}
+        </AnimatePresence>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <AnimatePresence mode="wait">
+            {!isLogin && (
+              <motion.div 
+                key="register-fields"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-6 overflow-hidden"
+              >
+                <div>
+                  <label className="block font-mono text-xs text-fog mb-2 tracking-wider">IDENTIFICADOR DEL NODO (NOMBRE BARBERÍA)</label>
+                  <input 
+                    type="text" 
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Ej. El Rey Barber Shop"
+                    className="w-full bg-steel border border-border rounded-lg px-4 py-4 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+                    required={!isLogin}
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-xs text-fog mb-2 tracking-wider">WHATSAPP DE CONTACTO</label>
+                  <input 
+                    type="tel" 
+                    value={whatsapp}
+                    onChange={e => setWhatsapp(e.target.value)}
+                    placeholder="+595 992 901 387"
+                    className="w-full bg-steel border border-border rounded-lg px-4 py-4 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+                    required={!isLogin}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div>
-            <label className="block font-mono text-xs text-fog mb-1">AUTH_EMAIL</label>
+            <label className="block font-mono text-xs text-fog mb-2 tracking-wider">CORREO ELECTRÓNICO ENCRIPTADO</label>
             <input 
               type="email" 
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full bg-steel border border-border rounded px-4 py-3 text-white focus:outline-none focus:border-accent transition-colors"
+              placeholder="admin@tu-barberia.com"
+              className="w-full bg-steel border border-border rounded-lg px-4 py-4 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
               required 
             />
           </div>
 
           <div>
-            <label className="block font-mono text-xs text-fog mb-1">AUTH_PASSWORD</label>
+            <label className="block font-mono text-xs text-fog mb-2 tracking-wider">LLAVE DE ACCESO (CONTRASEÑA)</label>
             <input 
               type="password" 
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full bg-steel border border-border rounded px-4 py-3 text-white focus:outline-none focus:border-accent transition-colors"
+              placeholder="••••••••••••"
+              className="w-full bg-steel border border-border rounded-lg px-4 py-4 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
               required 
             />
           </div>
@@ -127,21 +154,31 @@ export default function Login() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full py-4 bg-titanium text-void font-bold hover:bg-white transition-colors rounded-sm mt-6 font-mono disabled:opacity-50"
+            className="w-full py-4 bg-titanium text-void font-bold hover:bg-white transition-all rounded-lg mt-8 font-mono disabled:opacity-50 relative overflow-hidden group"
           >
-            {loading ? 'PROCESSING...' : (isLogin ? 'AUTHENTICATE' : 'INITIALIZE')}
+            <span className="relative z-10">
+              {loading ? 'PROCESANDO_VERIFICACIÓN...' : (isLogin ? 'AUTENTICAR_SESIÓN' : 'DESPLEGAR_NUEVO_NODO')}
+            </span>
+            <div className="absolute inset-0 bg-accent opacity-0 group-hover:opacity-20 transition-opacity" />
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-8 pt-6 border-t border-border text-center">
           <button 
             onClick={() => { setIsLogin(!isLogin); setError(''); }}
             className="font-mono text-xs text-fog hover:text-accent transition-colors"
           >
-            {isLogin ? 'REQUEST_NEW_NODE_ACCESS' : 'RETURN_TO_AUTH_PORTAL'}
+            {isLogin ? '> SOLICITAR_DESPLIEGUE_DE_NUEVO_NODO' : '> RETORNAR_AL_PORTAL_DE_AUTENTICACIÓN'}
           </button>
         </div>
       </motion.div>
+
+      {/* Info Flotante para el usuario */}
+      <div className="absolute bottom-8 text-center w-full z-10 pointer-events-none">
+        <p className="font-mono text-[10px] text-fog/50 tracking-widest">
+          EXCELITTYSOFT BARBER SAAS v2.0 • INFRAESTRUCTURA SEGURA
+        </p>
+      </div>
     </div>
   )
 }
